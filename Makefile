@@ -1,13 +1,13 @@
-CPP=g++
+CPP=colorgcc
 CPP_FLAGS=-Wall
 LD_FLAGS=-lglut -lGL -lGLU
 
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, handlers.o drawSurface.o main.o)
+OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o)
 
-executable=surface
+executable=cube
 
 .PHONY: clean
 

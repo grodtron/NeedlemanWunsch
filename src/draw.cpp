@@ -1,5 +1,4 @@
 #include <GL/freeglut.h>
-#include "../include/mainloop.hpp"
 
 void drawGrid(){
 
@@ -30,26 +29,3 @@ void drawBars(){
    glScalef(1.0,0.225,1.0);
    glTranslatef(1.0,-2.0,3.0);
 }
-
-void init (void) {
-   glEnable (GL_DEPTH_TEST);
-   glEnable (GL_LIGHTING);
-   glEnable (GL_LIGHT0);
-   glEnable ( GL_COLOR_MATERIAL ) ;
-}
-
-int main (int argc, char **argv) {
-   glutInit (&argc, argv);
-   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-   glutInitWindowSize (500, 500);
-   glutInitWindowPosition (100, 100);
-   glutCreateWindow ("A basic OpenGL Window");
-   init ();
-   glutDisplayFunc (display);
-   glutIdleFunc (display);
-   glutReshapeFunc (reshape);
-   glutMainLoop ();
-   return 0;
-}
-
-
