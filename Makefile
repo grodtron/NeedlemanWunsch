@@ -1,11 +1,11 @@
-CPP=colorgcc
-CPP_FLAGS=-Wall
+CPP=g++
+CPP_FLAGS=-Wall -std=gnu++0x
 LD_FLAGS=-lglut -lGL -lGLU
 
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o)
+OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o draw.o)
 
 executable=cube
 
@@ -15,7 +15,7 @@ executable=cube
 # this has to come BEFORE the ld flags, otherwise you get a million errors
 # $@ is the target name
 $(executable): $(OBJS)
-	$(CPP) $^ $(LD_FLAGS) $(CPP_FLAGS) -o $@
+	$(CPP) $^ $(LD_FLAGS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(OBJ_DIR)
 	$(CPP) $(CPP_FLAGS) -c $(firstword $^) -o $@
