@@ -46,7 +46,7 @@ void display (void) {
    drawBars();
 
    glutSwapBuffers();
-   azimuth += 0.006;
+   //azimuth += 0.006;
 }
 
 void reshape (int w, int h) {

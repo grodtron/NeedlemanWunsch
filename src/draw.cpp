@@ -2,6 +2,8 @@
 #include <random>
 #include <ctime>
 #include <iostream>
+#include <vector>
+#include "../include/findpaths.hpp"
 
 using std::rand;
 using std::srand;
@@ -10,27 +12,36 @@ using std::time;
 using std::cout;
 using std::endl;
 
+using std::vector;
+
 const int width = 31;
 const int height = 31;
 
 const float wOffset = (width  - 1)/2.0;
 const float hOffset = (height - 1)/2.0;
 
-int grid[width][height] = {{0}};
+vector< vector<int> > grid(0);
+vector< vector<point*>* >* paths = NULL;
 
 const float scale   = 0.2;
 
 void initGrid(){
+   srand(time(NULL));
    for(int i = 0; i < width; ++i){
+      grid.push_back(vector<int>(height));
       for(int j = 0; j < height; ++j){
-         if(i == 0) grid[0][j] = height - j;
-         else if(j == 0) grid[i][0] = width - i;
+         if (i == 0 && j == 0) grid[0][0] = 28;
+         else if(i == 0) grid[0][j] = rand()%30 + 1;
+         else if(j == 0) grid[i][0] = rand()%30 + 1;
          else{
             int temp = grid[i][j-1] > grid[i-1][j] ? grid[i][j-1] : grid[i-1][j];
             grid[i][j] = temp > grid[i-1][j-1] + 2 ? temp : grid[i-1][j-1] + 2;
          }
       }
    }
+   paths = new vector< vector<point*>* >;
+   getPaths(grid, paths);
+   cout << "received " << paths->size() << " paths" << endl;
 }
 
 void drawGrid(){
@@ -53,9 +64,46 @@ void drawGrid(){
    glEnd();
 }
 
+void drawPaths(){
+
+   //drawGrid();
+   if(!grid.size()) initGrid();
+
+   vector< vector<point*>*>::iterator it = paths->begin();
+   vector< vector<point*>*>::iterator end = paths->end();
+
+   glColorMaterial ( GL_FRONT_AND_BACK, GL_EMISSION ) ;
+
+   glColor3f(0.0,0.0,1.0);
+
+   for( ; it != end; ++it){
+      vector<point*>::iterator jt = (*it)->begin();
+      vector<point*>::iterator jnd = (*it)->end();
+
+      glBegin(GL_LINE_STRIP);
+
+      //cout << "drawing path: ";
+
+      for( ; jt != jnd; ++jt){
+         float x = ((*jt)->x - wOffset) * scale;
+         float y = (0.2 + grid[(*jt)->x][(*jt)->y] / 4.0) * scale;
+         float z = ((*jt)->y - hOffset) * scale;
+         glVertex3f(x,y,z);
+        // cout << x << ' ' << y <<  ' ' << z << '|';
+      }
+      //cout << endl;
+
+      glEnd();
+   }
+}
+
 void drawBars(){
 
-   if(!grid[0][0]) initGrid();
+   if(!grid.size()) initGrid();
+
+   drawPaths();
+
+   glColor3f(1.0,0.0,0.0);
 
    const float size = 1;
 

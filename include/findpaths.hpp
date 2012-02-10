@@ -1,6 +1,6 @@
 #ifndef FINDPATHS_H
 #define FINDPATHS_H
-#include <iostream>
+#include <vector>
 
 struct point{
    int x;
@@ -14,7 +14,8 @@ struct tree{
    struct point* point;
 };
 
-tree* findpaths(int a[50][50], int x, int y);
 
-void printPaths(tree* tree);
+void getPaths(
+      const std::vector< std::vector<int> >& a,
+      std::vector< std::vector<point*>* >* paths);
 #endif
