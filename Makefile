@@ -15,7 +15,7 @@ executable=cube
 # this has to come BEFORE the ld flags, otherwise you get a million errors
 # $@ is the target name
 $(executable): $(OBJS)
-	$(CPP) $^ $(LD_FLAGS) -o $@
+	$(CPP) $^ $(LD_FLAGS) $(CPP_FLAGS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(OBJ_DIR)
 	$(CPP) $(CPP_FLAGS) -c $(firstword $^) -o $@
