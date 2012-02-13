@@ -1,11 +1,12 @@
 CPP=g++
-CPP_FLAGS=-ggdb -Wall -std=gnu++0x
-LD_FLAGS=-lglut -lGL -lGLU
+CPP_FLAGS=-ggdb -Wall# -std=gnu++0x
+LD_FLAGS=#-lglut -lGL -lGLU
 
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o draw.o handlers.o NeedlemanWunsch.o)
+#OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o draw.o handlers.o NeedlemanWunsch.o)
+OBJS=$(addprefix $(OBJ_DIR)/, test.o NeedlemanWunsch.o)
 
 executable=cube
 
