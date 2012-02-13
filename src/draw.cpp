@@ -3,7 +3,8 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
-#include "../include/findpaths.hpp"
+//#include "../include/findpaths.hpp"
+#include "../include/NeedlemanWunsch.h"
 
 using std::rand;
 using std::srand;
@@ -20,54 +21,37 @@ const int height = 31;
 const float wOffset = (width  - 1)/2.0;
 const float hOffset = (height - 1)/2.0;
 
-vector< vector<int> > grid(0);
-vector< vector<point*>* >* paths = NULL;
+tree * paths = NULL;
+NeedlemanWunsch * nw = NULL;
 
 const float scale   = 0.2;
 
-void initGrid(){
+void initNW(){
    srand(time(NULL));
-   for(int i = 0; i < width; ++i){
-      grid.push_back(vector<int>(height));
-      for(int j = 0; j < height; ++j){
-         if (i == 0 && j == 0) grid[0][0] = 28;
-         else if(i == 0) grid[0][j] = rand()%30 + 1;
-         else if(j == 0) grid[i][0] = rand()%30 + 1;
-         else{
-            int temp = grid[i][j-1] > grid[i-1][j] ? grid[i][j-1] : grid[i-1][j];
-            grid[i][j] = temp > grid[i-1][j-1] + 2 ? temp : grid[i-1][j-1] + 2;
-         }
-      }
-   }
-   paths = new vector< vector<point*>* >;
-   getPaths(grid, paths);
-   cout << "received " << paths->size() << " paths" << endl;
+
+   char chars[4] = {'A', 'C', 'T', 'G'};
+
+   string * A = new string;
+   string * B = new string;
+
+   // initialize random strings of DNA
+   for(int i = 0; i < width; ++i)  A->push_back(chars[ rand() % 4 ]);
+   for(int j = 0; j < height; ++j) B->push_back(chars[ rand() % 4 ]);
+
+   nw = new NeedlemanWunsch(A, B);
+
+   delete A;
+   delete B;
+
+   nw->fullAlign();
+   //nw->printAlignments();
 }
 
-void drawGrid(){
-
-
-   glColorMaterial ( GL_FRONT_AND_BACK, GL_EMISSION ) ;
-
-   glBegin(GL_LINES);
-   glColor3f(1.0,0.0,0.0);
-
-   for(int i = 0; i < width; ++i){
-      for(int j = 0; j < height; ++j){
-         glVertex3f(0-wOffset  , 0 , j-hOffset);
-         glVertex3f(width-1-wOffset , 0 , j-hOffset);
-         glVertex3f(i-wOffset  , 0 , 0-hOffset);
-         glVertex3f(i-wOffset  , 0 , height-1-hOffset);
-      }
-   }
-
-   glEnd();
-}
-
+/*
 void drawPaths(){
 
    //drawGrid();
-   if(!grid.size()) initGrid();
+   if(!nw) initNW();
 
    vector< vector<point*>*>::iterator it = paths->begin();
    vector< vector<point*>*>::iterator end = paths->end();
@@ -96,12 +80,12 @@ void drawPaths(){
       glEnd();
    }
 }
+*/
+void drawGrid(){
 
-void drawBars(){
+   if(!nw) initNW();
 
-   if(!grid.size()) initGrid();
-
-   drawPaths();
+   //drawPaths();
 
    glColor3f(1.0,0.0,0.0);
 
@@ -124,7 +108,7 @@ void drawBars(){
          //
          // The translation should be calculated similarly.
          // it is -(size/2)/scaleFactor + size/2
-         float tallness = grid[i][j] / 4.0;
+         float tallness = nw->getF(i, j) / 4.0;
          float scaleFactor = tallness/vScale;
 
          glScalef(1, tallness/vScale, 1);
@@ -142,11 +126,7 @@ void drawBars(){
       // go to the next row
       glTranslatef(scale, 0, -width*scale);
    }
-   //cout << endl << endl;
-
+   // restore
    glScalef(1,1/vScale,1);
-
    glTranslatef((wOffset - width)*scale, 0, hOffset*scale);
-
-   //glutSolidSphere(wOffset, 16,16);
 }

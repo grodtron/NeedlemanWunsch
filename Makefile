@@ -5,7 +5,7 @@ LD_FLAGS=-lglut -lGL -lGLU
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o draw.o handlers.o findpaths.o)
+OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o draw.o handlers.o NeedlemanWunsch.o)
 
 executable=cube
 

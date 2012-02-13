@@ -89,7 +89,7 @@ void getPaths(tree* tree, deque<point*> &ancestry, vector< vector<point*>* >* pa
 // this is the public interface to the printPaths method
 void getPaths(const vector< vector<int> > & a,vector< vector<point*>* >* paths){
    deque<point*> ancestry;
-   tree* tree = findPaths(a, a.size() - 1, a[0].size() - 3);
+   tree* tree = findPaths(a, a.size() - 1, a.size() - 1);
    getPaths(tree, ancestry, paths);
 }
 

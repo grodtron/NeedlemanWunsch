@@ -43,7 +43,7 @@ void display (void) {
    //glRotatef(azimuth,0,1,0);
 
    //drawGrid();
-   drawBars();
+   drawGrid();
 
    glutSwapBuffers();
    //azimuth += 0.006;

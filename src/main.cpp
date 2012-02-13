@@ -15,7 +15,7 @@ int main (int argc, char **argv) {
    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
    glutInitWindowSize (500, 500);
    glutInitWindowPosition (100, 100);
-   glutCreateWindow ("Cubotron");
+   glutCreateWindow ("Needleman-Wunsch Visualization");
    init ();
 
    glutDisplayFunc (display);
