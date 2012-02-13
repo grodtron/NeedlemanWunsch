@@ -1,14 +1,14 @@
-#include "../include/NeedlemanWunsch.h"
+#include "../include/MyClass.h"
 #include <string>
 using std::string;
 
 
-int main(int argc, const char *argv[])
+int main()
 {
-   string A = "foobar";
-   string B = "foobaz";
+   string * A = new string("foobar");
+   string * B = new string("foobaz");
 
-   NeedlemanWunsch * nw = new NeedlemanWunsch(&A, &B);
+   MyClass * mc = new MyClass(A, B);
    
    return 0;
 }

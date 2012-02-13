@@ -6,7 +6,7 @@ OBJ_DIR=.objects
 SRC_DIR=src
 
 #OBJS=$(addprefix $(OBJ_DIR)/, main.o mainloop.o draw.o handlers.o NeedlemanWunsch.o)
-OBJS=$(addprefix $(OBJ_DIR)/, test.o NeedlemanWunsch.o)
+OBJS=$(addprefix $(OBJ_DIR)/, test.o MyClass.o)
 
 executable=cube
 

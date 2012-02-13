@@ -4,25 +4,28 @@ using std::vector;
 #include <string>
 using std::string;
 
-class NeedlemanWunsch{
-
+class MyClass{
       string * myString1;
       string * myString2;
 
       int length1;
       int length2;
 
-      vector< vector<int>* >* myVector;
+      vector< vector<int>* > * myVector;
 
-      void _init();
    public:
-      NeedlemanWunsch(string * a, string * b);
+      MyClass(string * a, string * b);
 };
 
-NeedlemanWunsch::NeedlemanWunsch(string * a, string * b)
+MyClass::MyClass(string * a, string * b)
 : myString1(a), myString2(b)
 {
    length1 = myString1->size();
+
+   // commenting either or both of these lines makes
+   // it work
+
    length2 = myString2->size();
+
    myVector = new vector< vector<int>* >;
 }
