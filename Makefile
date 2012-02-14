@@ -1,5 +1,5 @@
 CPP=g++
-CPP_FLAGS=-ggdb -Wall -std=gnu++0x
+CPP_FLAGS=-ggdb -Wall #-std=gnu++0x
 VIS_LD_FLAGS=-lglut -lGL -lGLU
 LD_FLAGS=
 
