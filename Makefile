@@ -38,7 +38,6 @@ executable=nw
 .PHONY: clean all
 
 all: $(vis_executable) $(executable)
-	@echo $(GCC_MAJOR_VERSION).$(GCC_MINOR_VERSION).$(GCC_PATCH_VERSION) $(GCC_IS_NEW)
 
 # $^ = RHS (dependencies)
 # this has to come BEFORE the ld flags, otherwise you get a million errors

@@ -11,6 +11,12 @@ using std::deque;
 #include <vector>
 using std::vector;
 
+#include <map>
+using std::map;
+
+#include <utility>
+using std::pair;
+
 #include <string>
 using std::string;
 
@@ -23,12 +29,12 @@ using std::tr1::shared_ptr;
 using std::shared_ptr;
 #endif
 #else
-This is some garbage incase __GNUC__ < four
+This is some garbage incase __GNUC__ is less than four
 #endif
 
 struct alignment{
-   string * A;
-   string * B;
+   string A;
+   string B;
 };
 
 struct tree{
@@ -54,6 +60,7 @@ class NeedlemanWunsch{
       // the outputted aligned strings
       vector<alignment*> alignments;
       tree* paths;
+      map<pair<int, int>, tree*> knownNodes;
 
       // the F matrix
       int width;
@@ -62,8 +69,10 @@ class NeedlemanWunsch{
 
       // initialize the F matrix
       void _init();
+
       // align the strings
       tree* _fullAlign(deque<char>*, deque<char>*, int, int);
+
       // get similarity between two chars
       int similarity(char a, char b);
 
@@ -112,15 +121,21 @@ tree* NeedlemanWunsch::_fullAlign(
    int i, int j
 ){
 
-   // construct Tree. I think this is only gonna be for
-   // visualization
    tree* root     = new tree;
    root->i        = i;
    root->j        = j;
-   // Autoset to Null by shared_ptr (I assume)
-   //root->left     = NULL;
-   //root->right    = NULL;
-   //root->center   = NULL;
+
+   pair<map< pair<int, int>, tree* >::iterator, bool> ret = 
+   knownNodes.insert(pair<pair<int,int>, tree*>(pair<int, int>(i, j), root));
+
+   if(ret.second){
+      cout << "New node inserted " << i << ' ' << j << endl;
+   }else{
+      cout << "\tDuplicate node not inserted " << i << ' ' << j << endl;
+      //delete root;
+      //root = ret.first->second;
+   }
+
 
    if(i > 0 && F->at(i-1)->at(j) == F->at(i)->at(j) ){
       ancestryA->push_back(A[i]);// no gap
@@ -150,17 +165,10 @@ tree* NeedlemanWunsch::_fullAlign(
    if(i == 0 && j == 0){
       alignment * al = new alignment;
 
-      // ancestryA and ancestryB should be 
-      // equal, so this is kind of just incase
-      al->A = new string;
-      al->B = new string;
+      // push back the current alignment
 
-      al->A->reserve(ancestryA->size());
-      al->B->reserve(ancestryB->size());
-
-      // copy the current deque into a new alignment struct
-      copy(ancestryA->begin(), ancestryA->end(), al->A->begin());
-      copy(ancestryB->begin(), ancestryB->end(), al->B->begin());
+      al->A.assign(ancestryA->begin(), ancestryA->end());
+      al->B.assign(ancestryB->begin(), ancestryB->end());
 
       alignments.push_back(al);
    }
@@ -194,8 +202,18 @@ NeedlemanWunsch::NeedlemanWunsch(string a, string b)
 // print the whole thing
 void NeedlemanWunsch::print(){
    if(&alignments){
-      cout << *(alignments[0]->A) << endl << *(alignments[0]->B) << endl;
+
+      vector<alignment*>::iterator it = alignments.begin();
+      vector<alignment*>::iterator end= alignments.end();
+      for(; it != end; ++it){
+         cout << (*it)->A  << endl << (*it)->B << endl;
+         cout << "================================" <<endl;
+      }
+
+   }else{
+      cout << "Not yet aligned" << endl;
    }
+
 }
 
 int NeedlemanWunsch::getF(int i, int j){
