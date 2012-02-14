@@ -189,7 +189,6 @@ NeedlemanWunsch::NeedlemanWunsch(string a, string b)
    width  = A.size();
    height = B.size();
    _init();
-   _align();
 }
 
 // print the whole thing
