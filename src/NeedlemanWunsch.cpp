@@ -52,9 +52,6 @@ class NeedlemanWunsch{
       string B;
 
       // the outputted aligned strings
-      string alignedA;
-      string alignedB;
-
       vector<alignment*> alignments;
       tree* paths;
 
@@ -66,20 +63,17 @@ class NeedlemanWunsch{
       // initialize the F matrix
       void _init();
       // align the strings
-      void  _align();
       tree* _fullAlign(deque<char>*, deque<char>*, int, int);
       // get similarity between two chars
-      int  similarity(char a, char b);
+      int similarity(char a, char b);
 
       int (*similarityFunction)(char a, char b);
 
    public:
-      NeedlemanWunsch(string & a, string & b);
-      NeedlemanWunsch(string * a, string * b);
+      NeedlemanWunsch(string a, string b);
       void print();
       int getF(int i, int j);
       void setSimilarityFunction(int (*f)(char, char));
-      void align();
       void fullAlign();
 };
 
@@ -110,46 +104,6 @@ void NeedlemanWunsch::_init(){
          }
       }
    }
-}
-
-// go through the matrix and pick the first
-// path (instead of recursing through the
-// whole thing)
-void NeedlemanWunsch::_align(){
-   int i = width  - 1;
-   int j = height - 1;
-
-   while(1){
-
-      int val = F->at(i)->at(j);
-      if(i > 0 && j > 0 && val == F->at(i-1)->at(j-1) + similarity(A[i],B[j])){
-         //cout << "A += " << A[i] << ", B += " << B[j] << endl;
-         alignedA.insert(alignedA.begin(), A[i]);
-         alignedB.insert(alignedB.begin(), B[j]);
-         j -= 1;
-         i -= 1;
-
-      }else if(i > 0 && val == F->at(i-1)->at(j) ){
-         //cout << "A += " << A[i] << ", B += -" << endl;
-         alignedA.insert(alignedA.begin(), A[i]);
-         alignedB.insert(alignedB.begin(),  '-');
-         i -= 1;
-
-      }else if(j > 0 && val == F->at(i)->at(j-1) ){
-         //cout << "A += -, B += " << B[j] << endl;
-         alignedA.insert(alignedA.begin(),  '-');
-         alignedB.insert(alignedB.begin(), B[j]);
-         j -= 1;
-
-      }else{
-         break;
-
-      }
-   }
-
-   //cout << "A += " << A[i] << ", B += " << B[j] << endl;
-   alignedA.insert(alignedA.begin(), A[i]);
-   alignedB.insert(alignedB.begin(), B[j]);
 }
 
 tree* NeedlemanWunsch::_fullAlign(
@@ -228,19 +182,9 @@ int NeedlemanWunsch::similarity(char a, char b){
 /////////////////////////////////////////////
 
 // constructor!
-NeedlemanWunsch::NeedlemanWunsch(string & a, string & b)
-: A(a), B(b), alignedA(""), alignedB(""), paths(NULL), F(NULL), similarityFunction(NULL)
-{
-   width  = A.size();
-   height = B.size();
-   _init();
-   _align();
-}
-
-// constructor!
 //
-NeedlemanWunsch::NeedlemanWunsch(string * a, string * b)
-: A(*a), B(*b), alignedA(""), alignedB(""), paths(NULL), F(NULL), similarityFunction(NULL)
+NeedlemanWunsch::NeedlemanWunsch(string a, string b)
+: A(a), B(b), paths(NULL), F(NULL), similarityFunction(NULL)
 {
    width  = A.size();
    height = B.size();
@@ -252,8 +196,6 @@ NeedlemanWunsch::NeedlemanWunsch(string * a, string * b)
 void NeedlemanWunsch::print(){
    if(&alignments){
       cout << *(alignments[0]->A) << endl << *(alignments[0]->B) << endl;
-   }else{
-      cout << endl << "Aligned strings:" << endl << alignedA << endl << alignedB << endl;
    }
 }
 
@@ -263,13 +205,6 @@ int NeedlemanWunsch::getF(int i, int j){
 
 void NeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
    similarityFunction = f;
-}
-
-void NeedlemanWunsch::align(){
-   alignedA = "";
-   alignedB = "";
-   _init();
-   _align();
 }
 
 void NeedlemanWunsch::fullAlign(){
