@@ -1,32 +1,23 @@
-#include <GL/freeglut.h>
-#include "../include/mainloop.hpp"
-#include "../include/draw.hpp"
-#include "../include/handlers.hpp"
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::cin;
 
-void init (void) {
-   glEnable (GL_DEPTH_TEST);
-   glEnable (GL_LIGHTING);
-   glEnable (GL_LIGHT0);
-   glEnable ( GL_COLOR_MATERIAL ) ;
-}
+#include <string>
+using std::string;
 
-int main (int argc, char **argv) {
-   glutInit (&argc, argv);
-   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-   glutInitWindowSize (500, 500);
-   glutInitWindowPosition (100, 100);
-   glutCreateWindow ("Needleman-Wunsch Visualization");
-   init ();
+#include "../include/NeedlemanWunsch.h"
 
-   glutDisplayFunc (display);
-   glutIdleFunc (display);
-   glutReshapeFunc (reshape);
 
-   glutKeyboardFunc(processKeys);
-   glutSpecialFunc(processSpecialKeys);
+int main(int argc, const char *argv[])
+{
 
-   glutMainLoop ();
+   string A, B;
+   cout << "Enter two strings to be aligned: ";
+   cin >> A >> B;
+   NeedlemanWunsch nw(&A, &B);
+   nw.align();
+   nw.print();
+   
    return 0;
 }
-
-

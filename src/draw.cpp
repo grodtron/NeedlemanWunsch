@@ -15,8 +15,8 @@ using std::endl;
 
 using std::vector;
 
-const int width = 11;
-const int height = 11;
+const int width = 31;
+const int height = 31;
 
 const float wOffset = (width  - 1)/2.0;
 const float hOffset = (height - 1)/2.0;
@@ -40,54 +40,16 @@ void initNW(){
 
    nw = new NeedlemanWunsch(A, B);
 
-   //delete A;
-   //delete B;
-
-   nw->fullAlign();
-   //nw->printAlignments();
+   nw->align();
 }
 
-/*
-void drawPaths(){
-
-   //drawGrid();
-   if(!nw) initNW();
-
-   vector< vector<point*>*>::iterator it = paths->begin();
-   vector< vector<point*>*>::iterator end = paths->end();
-
-   glColorMaterial ( GL_FRONT_AND_BACK, GL_EMISSION ) ;
-
-   glColor3f(0.0,0.0,1.0);
-
-   for( ; it != end; ++it){
-      vector<point*>::iterator jt = (*it)->begin();
-      vector<point*>::iterator jnd = (*it)->end();
-
-      glBegin(GL_LINE_STRIP);
-
-      //cout << "drawing path: ";
-
-      for( ; jt != jnd; ++jt){
-         float x = ((*jt)->x - wOffset) * scale;
-         float y = (0.2 + grid[(*jt)->x][(*jt)->y] / 4.0) * scale;
-         float z = ((*jt)->y - hOffset) * scale;
-         glVertex3f(x,y,z);
-        // cout << x << ' ' << y <<  ' ' << z << '|';
-      }
-      //cout << endl;
-
-      glEnd();
-   }
-}
-*/
 void drawGrid(){
 
    if(!nw) initNW();
 
-   glColor3f(1.0,0.0,0.0);
+   glColorMaterial ( GL_FRONT, GL_DIFFUSE ) ;
+   glColor3f(1.0,1.0,1.0);
 
-   glColorMaterial ( GL_FRONT_AND_BACK, GL_EMISSION ) ;
 
    const float size = 1;
 
@@ -108,8 +70,7 @@ void drawGrid(){
          //
          // The translation should be calculated similarly.
          // it is -(size/2)/scaleFactor + size/2
-         float tallness = nw->getF(i, j) / 4.0;
-         cout << tallness << endl;
+         float tallness = (nw->getF(i, j) / 4.0) + 1.0;
          float scaleFactor = tallness/vScale;
 
          glScalef(1, tallness/vScale, 1);

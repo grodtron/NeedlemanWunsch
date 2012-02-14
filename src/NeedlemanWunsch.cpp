@@ -1,7 +1,7 @@
-//#include <iostream>
-//using std:://cout;
+#include <iostream>
+using std::cout;
 //using std::cin ;
-//using std::endl;
+using std::endl;
 
 //#include <iomanip>
 //using std::setw;
@@ -242,6 +242,7 @@ NeedlemanWunsch::NeedlemanWunsch(string * a, string * b)
 // print the whole thing
 void NeedlemanWunsch::print(){
    //cout << "    ";
+   /*
    for(int i = 0; i < width; ++i){
       //cout << setw(4) << A[i];
    }
@@ -252,8 +253,8 @@ void NeedlemanWunsch::print(){
          //cout << setw(4) << F->at(i)->at(j);
       }
       //cout << endl;
-   }
-   //cout << endl << "Aligned strings:" << endl << alignedA << endl << alignedB << endl;
+   }*/
+   cout << endl << "Aligned strings:" << endl << alignedA << endl << alignedB << endl;
 }
 
 int NeedlemanWunsch::getF(int i, int j){
