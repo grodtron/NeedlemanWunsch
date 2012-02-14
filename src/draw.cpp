@@ -15,8 +15,8 @@ using std::endl;
 
 using std::vector;
 
-const int width = 31;
-const int height = 31;
+const int width = 11;
+const int height = 11;
 
 const float wOffset = (width  - 1)/2.0;
 const float hOffset = (height - 1)/2.0;
@@ -40,8 +40,8 @@ void initNW(){
 
    nw = new NeedlemanWunsch(A, B);
 
-   delete A;
-   delete B;
+   //delete A;
+   //delete B;
 
    nw->fullAlign();
    //nw->printAlignments();
@@ -85,9 +85,9 @@ void drawGrid(){
 
    if(!nw) initNW();
 
-   //drawPaths();
-
    glColor3f(1.0,0.0,0.0);
+
+   glColorMaterial ( GL_FRONT_AND_BACK, GL_EMISSION ) ;
 
    const float size = 1;
 
@@ -109,6 +109,7 @@ void drawGrid(){
          // The translation should be calculated similarly.
          // it is -(size/2)/scaleFactor + size/2
          float tallness = nw->getF(i, j) / 4.0;
+         cout << tallness << endl;
          float scaleFactor = tallness/vScale;
 
          glScalef(1, tallness/vScale, 1);
