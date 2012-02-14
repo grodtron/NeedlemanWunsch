@@ -38,9 +38,9 @@ void initNW(){
    for(int i = 0; i < width; ++i)  A->push_back(chars[ rand() % 4 ]);
    for(int j = 0; j < height; ++j) B->push_back(chars[ rand() % 4 ]);
 
-   nw = new NeedlemanWunsch(A, B);
+   nw = new NeedlemanWunsch(*A, *B);
 
-   nw->align();
+   nw->fullAlign();
 }
 
 void drawGrid(){

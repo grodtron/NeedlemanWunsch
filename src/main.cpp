@@ -15,7 +15,7 @@ int main(int argc, const char *argv[])
    string A, B;
    cout << "Enter two strings to be aligned: ";
    cin >> A >> B;
-   NeedlemanWunsch nw(&A, &B);
+   NeedlemanWunsch nw(A, B);
    nw.fullAlign();
    nw.print();
    
