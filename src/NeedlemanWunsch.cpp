@@ -1,11 +1,7 @@
 #include <iostream>
 using std::cout;
-//using std::cin ;
 using std::endl;
 
-//#include <iomanip>
-//using std::setw;
-//
 #include <algorithm>
 using std::copy;
 
@@ -18,15 +14,27 @@ using std::vector;
 #include <string>
 using std::string;
 
+#if __GNUC__ == 4
+#if __GNUC_MINOR__ < 3
+#include <tr1/memory>
+using std::tr1::shared_ptr;
+#else
+#include <memory>
+using std::shared_ptr;
+#endif
+#else
+This is some garbage incase __GNUC__ < four
+#endif
+
 struct alignment{
    string * A;
    string * B;
 };
 
 struct tree{
-   struct tree* left;
-   struct tree* center;
-   struct tree* right;
+   shared_ptr<struct tree> left;
+   shared_ptr<struct tree> center;
+   shared_ptr<struct tree> right;
    int i;
    int j;
 };
@@ -155,28 +163,29 @@ tree* NeedlemanWunsch::_fullAlign(
    tree* root     = new tree;
    root->i        = i;
    root->j        = j;
-   root->left     = NULL;
-   root->right    = NULL;
-   root->center   = NULL;
+   // Autoset to Null by shared_ptr (I assume)
+   //root->left     = NULL;
+   //root->right    = NULL;
+   //root->center   = NULL;
 
    if(i > 0 && F->at(i-1)->at(j) == F->at(i)->at(j) ){
       ancestryA->push_back(A[i]);// no gap
       ancestryB->push_back('-'); // gap
-      root->left = _fullAlign(ancestryA, ancestryB, i-1, j);
+      root->left.reset(_fullAlign(ancestryA, ancestryB, i-1, j));
       ancestryA->pop_back();
       ancestryB->pop_back();
    }
    if(j > 0 && F->at(i)->at(j-1) == F->at(i)->at(j) ){
       ancestryA->push_back('-'); // gap
       ancestryB->push_back(B[j]);// no gap
-      root->right = _fullAlign(ancestryA, ancestryB, i, j-1);
+      root->right.reset(_fullAlign(ancestryA, ancestryB, i, j-1));
       ancestryA->pop_back();
       ancestryB->pop_back();
    }
    if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == F->at(i)->at(j) ){
       ancestryA->push_back(A[i]);// no gap
       ancestryB->push_back(B[j]);// no gap
-      root->center = _fullAlign(ancestryA, ancestryB, i-1, j-1);
+      root->center.reset(_fullAlign(ancestryA, ancestryB, i-1, j-1));
       ancestryA->pop_back();
       ancestryB->pop_back();
    }
@@ -241,20 +250,11 @@ NeedlemanWunsch::NeedlemanWunsch(string * a, string * b)
 
 // print the whole thing
 void NeedlemanWunsch::print(){
-   //cout << "    ";
-   /*
-   for(int i = 0; i < width; ++i){
-      //cout << setw(4) << A[i];
+   if(&alignments){
+      cout << *(alignments[0]->A) << endl << *(alignments[0]->B) << endl;
+   }else{
+      cout << endl << "Aligned strings:" << endl << alignedA << endl << alignedB << endl;
    }
-   //cout << endl;
-   for(int j = 0; j < height; ++j){
-      //cout << setw(4) << B[j];
-      for(int i = 0; i < width; ++i){
-         //cout << setw(4) << F->at(i)->at(j);
-      }
-      //cout << endl;
-   }*/
-   cout << endl << "Aligned strings:" << endl << alignedA << endl << alignedB << endl;
 }
 
 int NeedlemanWunsch::getF(int i, int j){
