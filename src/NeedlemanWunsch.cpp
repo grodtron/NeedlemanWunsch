@@ -157,12 +157,12 @@ alignmentVector * NeedlemanWunsch::_fullAlign(int i, int j){
       copyAndAppend(tempStrings, strings, '-', B[j]);
    }
    if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == score ){
-      tempStrings = _fullAlign(i, j-1);
+      tempStrings = _fullAlign(i-1, j-1);
       copyAndAppend(tempStrings, strings, A[i], B[j]);
    }
 
    if(i == 0 && j == 0){
-      strings->push_back( alignment(A.substr(0, 1), B.substr(0, 1), score) );
+      strings->push_back( alignment(A.substr(0, 1), B.substr(0, 1)) );
    }
 
    return strings;
