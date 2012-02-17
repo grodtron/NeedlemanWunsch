@@ -29,23 +29,16 @@ using std::tr1::shared_ptr;
 using std::shared_ptr;
 #endif
 #else
-This is some garbage incase __GNUC__ is less than four
+This is some garbage incase __GNUC__ is less than four to make g++ barf
 #endif
+
+typedef vector< pair<string, string> > stringPairVector; 
+typedef map< pair<int, int>, stringPairVector* > svpCoordMap;
 
 struct alignment{
    string A;
    string B;
 };
-
-struct tree{
-   shared_ptr<struct tree> left;
-   shared_ptr<struct tree> center;
-   shared_ptr<struct tree> right;
-   int i;
-   int j;
-};
-
-// utils
 
 int max(int x, int y, int z){
    return (x > y) ? (x > z ? x : z) : (y > z ? y : z);
@@ -59,8 +52,7 @@ class NeedlemanWunsch{
 
       // the outputted aligned strings
       vector<alignment*> alignments;
-      tree* paths;
-      map<pair<int, int>, tree*> knownNodes;
+      svpCoordMap knownNodes;
 
       // the F matrix
       int width;
@@ -71,7 +63,7 @@ class NeedlemanWunsch{
       void _init();
 
       // align the strings
-      tree* _fullAlign(deque<char>*, deque<char>*, int, int);
+      stringPairVector * _fullAlign(int, int);
 
       // get similarity between two chars
       int similarity(char a, char b);
@@ -115,65 +107,66 @@ void NeedlemanWunsch::_init(){
    }
 }
 
-tree* NeedlemanWunsch::_fullAlign(
-   deque<char> * ancestryA,
-   deque<char> * ancestryB,
-   int i, int j
-){
+void copyAndAppend(stringPairVector * from, stringPairVector * to, char appendFirst, char appendSecond){
 
-   tree* root     = new tree;
-   root->i        = i;
-   root->j        = j;
 
-   pair<map< pair<int, int>, tree* >::iterator, bool> ret = 
-   knownNodes.insert(pair<pair<int,int>, tree*>(pair<int, int>(i, j), root));
+   // allocate space for the new elements
+   int increase = from->size();
+   to->resize(to->size() + increase);
+
+   // get the position within the vecotr that the new insertions
+   // will start at
+   stringPairVector::iterator it = to->end() - increase;
+
+   // insert from the $from vector into the $to vector, starting
+   // at the end position
+   // TODO - is this a shallow copy or a deep copy?
+   copy(from->begin(), from->end(), it);
+
+   // get the new end point of the $to vector
+   stringPairVector::iterator end= to->end();
+
+   for(; it != end; ++it){
+      it->first .push_back(appendFirst );
+      it->second.push_back(appendSecond);
+   }
+}
+
+stringPairVector * NeedlemanWunsch::_fullAlign(int i, int j){
+
+   stringPairVector * strings = new stringPairVector;
+
+   stringPairVector * tempStrings =  NULL;
+
+   pair< svpCoordMap::iterator, bool> ret = 
+      knownNodes.insert( pair<pair<int,int>,stringPairVector*>(pair<int, int>(i, j), strings) );
 
    if(ret.second){
       cout << "New node inserted " << i << ' ' << j << endl;
    }else{
       cout << "\tDuplicate node not inserted " << i << ' ' << j << endl;
-      //delete root;
-      //root = ret.first->second;
+      delete strings;
+      return ret.first->second;
    }
-
 
    if(i > 0 && F->at(i-1)->at(j) == F->at(i)->at(j) ){
-      ancestryA->push_back(A[i]);// no gap
-      ancestryB->push_back('-'); // gap
-      root->left.reset(_fullAlign(ancestryA, ancestryB, i-1, j));
-      ancestryA->pop_back();
-      ancestryB->pop_back();
+      tempStrings = _fullAlign(i-1, j);
+      copyAndAppend(tempStrings, strings, A[i], '-');
    }
    if(j > 0 && F->at(i)->at(j-1) == F->at(i)->at(j) ){
-      ancestryA->push_back('-'); // gap
-      ancestryB->push_back(B[j]);// no gap
-      root->right.reset(_fullAlign(ancestryA, ancestryB, i, j-1));
-      ancestryA->pop_back();
-      ancestryB->pop_back();
+      tempStrings = _fullAlign(i, j-1);
+      copyAndAppend(tempStrings, strings, '-', B[j]);
    }
    if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == F->at(i)->at(j) ){
-      ancestryA->push_back(A[i]);// no gap
-      ancestryB->push_back(B[j]);// no gap
-      root->center.reset(_fullAlign(ancestryA, ancestryB, i-1, j-1));
-      ancestryA->pop_back();
-      ancestryB->pop_back();
+      tempStrings = _fullAlign(i, j-1);
+      copyAndAppend(tempStrings, strings, A[i], B[j]);
    }
 
-   // this means we're at a leaf node
-   // copy the current deques into the alignment
-   // vector to save them
    if(i == 0 && j == 0){
-      alignment * al = new alignment;
-
-      // push back the current alignment
-
-      al->A.assign(ancestryA->begin(), ancestryA->end());
-      al->B.assign(ancestryB->begin(), ancestryB->end());
-
-      alignments.push_back(al);
+      strings->push_back( pair<string, string>(A.substr(0, 1), B.substr(0, 1)) );
    }
 
-   return root;
+   return strings;
 }
 
 int NeedlemanWunsch::similarity(char a, char b){
@@ -192,7 +185,7 @@ int NeedlemanWunsch::similarity(char a, char b){
 // constructor!
 //
 NeedlemanWunsch::NeedlemanWunsch(string a, string b)
-: A(a), B(b), paths(NULL), F(NULL), similarityFunction(NULL)
+: A(a), B(b), F(NULL), similarityFunction(NULL)
 {
    width  = A.size();
    height = B.size();
@@ -226,20 +219,13 @@ void NeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
 
 void NeedlemanWunsch::fullAlign(){
 
-   deque<char> * ancestryA = new deque<char>();
-   deque<char> * ancestryB = new deque<char>();
-
    // TODO proper destructor!
-   if(paths) delete paths;
+   //if(paths) delete paths;
 
-   paths = _fullAlign(
-      ancestryA,
-      ancestryB,
+   //paths = 
+   _fullAlign(
       F->size() - 1,
       F->at(0)->size() - 1
    );
-
-   delete ancestryA;
-   delete ancestryB;
 }
 
