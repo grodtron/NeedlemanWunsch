@@ -32,13 +32,9 @@ using std::shared_ptr;
 This is some garbage incase __GNUC__ is less than four to make g++ barf
 #endif
 
-typedef vector< pair<string, string> > stringPairVector; 
-typedef map< pair<int, int>, stringPairVector* > svpCoordMap;
-
-struct alignment{
-   string A;
-   string B;
-};
+typedef pair<string, string> alignment;
+typedef vector< alignment > alignmentVector; 
+typedef map< pair<int, int>, alignmentVector* > svpCoordMap;
 
 int max(int x, int y, int z){
    return (x > y) ? (x > z ? x : z) : (y > z ? y : z);
@@ -51,7 +47,7 @@ class NeedlemanWunsch{
       string B;
 
       // the outputted aligned strings
-      stringPairVector * alignments;
+      alignmentVector * alignments;
       svpCoordMap knownNodes;
 
       // the F matrix
@@ -63,7 +59,7 @@ class NeedlemanWunsch{
       void _init();
 
       // align the strings
-      stringPairVector * _fullAlign(int, int);
+      alignmentVector * _fullAlign(int, int);
 
       // get similarity between two chars
       int similarity(char a, char b);
@@ -72,6 +68,7 @@ class NeedlemanWunsch{
 
    public:
       NeedlemanWunsch(string a, string b);
+      ~NeedlemanWunsch();
       void print();
       int getF(int i, int j);
       void setSimilarityFunction(int (*f)(char, char));
@@ -107,7 +104,7 @@ void NeedlemanWunsch::_init(){
    }
 }
 
-void copyAndAppend(stringPairVector * from, stringPairVector * to, char appendFirst, char appendSecond){
+void copyAndAppend(alignmentVector * from, alignmentVector * to, char appendFirst, char appendSecond){
 
 
    // allocate space for the new elements
@@ -116,7 +113,7 @@ void copyAndAppend(stringPairVector * from, stringPairVector * to, char appendFi
 
    // get the position within the vecotr that the new insertions
    // will start at
-   stringPairVector::iterator it = to->end() - increase;
+   alignmentVector::iterator it = to->end() - increase;
 
    // insert from the $from vector into the $to vector, starting
    // at the end position
@@ -124,7 +121,7 @@ void copyAndAppend(stringPairVector * from, stringPairVector * to, char appendFi
    copy(from->begin(), from->end(), it);
 
    // get the new end point of the $to vector
-   stringPairVector::iterator end= to->end();
+   alignmentVector::iterator end= to->end();
 
    for(; it != end; ++it){
       it->first .push_back(appendFirst );
@@ -132,14 +129,16 @@ void copyAndAppend(stringPairVector * from, stringPairVector * to, char appendFi
    }
 }
 
-stringPairVector * NeedlemanWunsch::_fullAlign(int i, int j){
+alignmentVector * NeedlemanWunsch::_fullAlign(int i, int j){
 
-   stringPairVector * strings = new stringPairVector;
+   alignmentVector * strings = new alignmentVector;
 
-   stringPairVector * tempStrings =  NULL;
+   alignmentVector * tempStrings =  NULL;
 
    pair< svpCoordMap::iterator, bool> ret = 
-      knownNodes.insert( pair<pair<int,int>,stringPairVector*>(pair<int, int>(i, j), strings) );
+      knownNodes.insert( pair<pair<int,int>,alignmentVector*>(pair<int, int>(i, j), strings) );
+
+   int score = F->at(i)->at(j);
 
    if(ret.second){
       cout << "New node inserted " << i << ' ' << j << endl;
@@ -149,21 +148,21 @@ stringPairVector * NeedlemanWunsch::_fullAlign(int i, int j){
       return ret.first->second;
    }
 
-   if(i > 0 && F->at(i-1)->at(j) == F->at(i)->at(j) ){
+   if(i > 0 && F->at(i-1)->at(j) == score ){
       tempStrings = _fullAlign(i-1, j);
       copyAndAppend(tempStrings, strings, A[i], '-');
    }
-   if(j > 0 && F->at(i)->at(j-1) == F->at(i)->at(j) ){
+   if(j > 0 && F->at(i)->at(j-1) == score ){
       tempStrings = _fullAlign(i, j-1);
       copyAndAppend(tempStrings, strings, '-', B[j]);
    }
-   if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == F->at(i)->at(j) ){
+   if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == score ){
       tempStrings = _fullAlign(i, j-1);
       copyAndAppend(tempStrings, strings, A[i], B[j]);
    }
 
    if(i == 0 && j == 0){
-      strings->push_back( pair<string, string>(A.substr(0, 1), B.substr(0, 1)) );
+      strings->push_back( alignment(A.substr(0, 1), B.substr(0, 1), score) );
    }
 
    return strings;
@@ -192,12 +191,34 @@ NeedlemanWunsch::NeedlemanWunsch(string a, string b)
    _init();
 }
 
+// destructor!
+NeedlemanWunsch::~NeedlemanWunsch(){
+   if(F){
+      vector<vector<int>* >::iterator it = F->begin();
+      vector<vector<int>* >::iterator end = F->end();
+      for(; it != end; ++it){
+         delete *it;
+         *it = NULL;
+      }
+      delete F;
+   }
+   svpCoordMap::iterator it = knownNodes.begin();
+   svpCoordMap::iterator end= knownNodes.end();
+
+   for(;it != end; ++it){
+      delete it->second;
+   }
+
+   //delete alignments;
+
+}
+
 // print the whole thing
 void NeedlemanWunsch::print(){
    if(alignments){
 
-      stringPairVector::iterator it = alignments->begin();
-      stringPairVector::iterator end= alignments->end();
+      alignmentVector::iterator it = alignments->begin();
+      alignmentVector::iterator end= alignments->end();
       for(; it != end; ++it){
          cout << it->first  << endl << it->second << endl;
          cout << "================================" <<endl;
@@ -227,7 +248,5 @@ void NeedlemanWunsch::fullAlign(){
       F->size() - 1,
       F->at(0)->size() - 1
    );
-
-   print();
 }
 
