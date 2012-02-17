@@ -6,7 +6,6 @@ GCC_PATCH_VERSION := $(shell g++ -dumpversion | awk -F. '{ print $$3 }')
 GCC_IS_NEW := $(shell expr `expr $(GCC_MAJOR_VERSION) == 4` \& `expr $(GCC_MINOR_VERSION) \>= 4` )
 
 CPP_FLAGS=-ggdb -Wall
-VIS_LD_FLAGS=-lglut -lGL -lGLU
 LD_FLAGS=
 
 # necessary for newer versions of g++ for <random>
@@ -29,21 +28,17 @@ endif
 OBJ_DIR=.objects
 SRC_DIR=src
 
-VIS_OBJS=$(addprefix $(OBJ_DIR)/, main_vis.o mainloop.o draw.o handlers.o NeedlemanWunsch.o)
 OBJS=$(addprefix $(OBJ_DIR)/, main.o NeedlemanWunsch.o)
 
-vis_executable=nwvis
 executable=nw
 
 .PHONY: clean all
 
-all: $(vis_executable) $(executable)
+all: $(executable)
 
 # $^ = RHS (dependencies)
 # this has to come BEFORE the ld flags, otherwise you get a million errors
 # $@ is the target name
-$(vis_executable): $(VIS_OBJS)
-	$(CPP) $^ $(VIS_LD_FLAGS) $(CPP_FLAGS) -o $@
 
 $(executable): $(OBJS)
 	$(CPP) $^ $(LD_FLAGS) $(CPP_FLAGS) -o $@
@@ -55,4 +50,3 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 clean:
 	rm -rf $(OBJ_DIR)
 	rm -f $(executable)
-	rm -f $(vis_executable)

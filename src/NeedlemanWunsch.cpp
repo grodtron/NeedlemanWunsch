@@ -59,7 +59,8 @@ class NeedlemanWunsch{
       void _init();
 
       // align the strings
-      alignmentVector * _fullAlign(int, int);
+      alignmentVector * _fastAlign(int, int);
+      alignmentVector * _slowAlign(int, int);
 
       // get similarity between two chars
       int similarity(char a, char b);
@@ -72,7 +73,8 @@ class NeedlemanWunsch{
       void print();
       int getF(int i, int j);
       void setSimilarityFunction(int (*f)(char, char));
-      void fullAlign();
+      void fastAlign();
+      void slowAlign();
 };
 
 /////////////////////////////////////////////
@@ -129,7 +131,7 @@ void copyAndAppend(alignmentVector * from, alignmentVector * to, char appendFirs
    }
 }
 
-alignmentVector * NeedlemanWunsch::_fullAlign(int i, int j){
+alignmentVector * NeedlemanWunsch::_fastAlign(int i, int j){
 
    alignmentVector * strings = new alignmentVector;
 
@@ -149,15 +151,15 @@ alignmentVector * NeedlemanWunsch::_fullAlign(int i, int j){
    }
 
    if(i > 0 && F->at(i-1)->at(j) == score ){
-      tempStrings = _fullAlign(i-1, j);
+      tempStrings = _fastAlign(i-1, j);
       copyAndAppend(tempStrings, strings, A[i], '-');
    }
    if(j > 0 && F->at(i)->at(j-1) == score ){
-      tempStrings = _fullAlign(i, j-1);
+      tempStrings = _fastAlign(i, j-1);
       copyAndAppend(tempStrings, strings, '-', B[j]);
    }
    if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == score ){
-      tempStrings = _fullAlign(i-1, j-1);
+      tempStrings = _fastAlign(i-1, j-1);
       copyAndAppend(tempStrings, strings, A[i], B[j]);
    }
 
@@ -238,13 +240,13 @@ void NeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
    similarityFunction = f;
 }
 
-void NeedlemanWunsch::fullAlign(){
+void NeedlemanWunsch::fastAlign(){
 
    // TODO proper destructor!
    //if(paths) delete paths;
 
    //paths = 
-   alignments = _fullAlign(
+   alignments = _fastAlign(
       F->size() - 1,
       F->at(0)->size() - 1
    );
