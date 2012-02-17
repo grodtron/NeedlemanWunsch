@@ -50,7 +50,7 @@ $(executable): $(OBJS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_DIR)
-	$(CPP) $(CPP_FLAGS) -c $(firstword $^) -o $@
+	$(CPP) $(CPP_FLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(OBJ_DIR)
