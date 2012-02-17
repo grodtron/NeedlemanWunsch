@@ -51,7 +51,7 @@ class NeedlemanWunsch{
       string B;
 
       // the outputted aligned strings
-      vector<alignment*> alignments;
+      stringPairVector * alignments;
       svpCoordMap knownNodes;
 
       // the F matrix
@@ -185,7 +185,7 @@ int NeedlemanWunsch::similarity(char a, char b){
 // constructor!
 //
 NeedlemanWunsch::NeedlemanWunsch(string a, string b)
-: A(a), B(b), F(NULL), similarityFunction(NULL)
+: A(a), B(b), alignments(NULL), F(NULL), similarityFunction(NULL)
 {
    width  = A.size();
    height = B.size();
@@ -194,12 +194,12 @@ NeedlemanWunsch::NeedlemanWunsch(string a, string b)
 
 // print the whole thing
 void NeedlemanWunsch::print(){
-   if(&alignments){
+   if(alignments){
 
-      vector<alignment*>::iterator it = alignments.begin();
-      vector<alignment*>::iterator end= alignments.end();
+      stringPairVector::iterator it = alignments->begin();
+      stringPairVector::iterator end= alignments->end();
       for(; it != end; ++it){
-         cout << (*it)->A  << endl << (*it)->B << endl;
+         cout << it->first  << endl << it->second << endl;
          cout << "================================" <<endl;
       }
 
@@ -223,9 +223,11 @@ void NeedlemanWunsch::fullAlign(){
    //if(paths) delete paths;
 
    //paths = 
-   _fullAlign(
+   alignments = _fullAlign(
       F->size() - 1,
       F->at(0)->size() - 1
    );
+
+   print();
 }
 
