@@ -1,7 +1,8 @@
 #ifndef UTILS_CPP_
 #define UTILS_CPP_
 
-inline int max(int x, int y, int z){
+template <typename T>
+inline T max(T x, T y, T z){
    return (x > y) ? (x > z ? x : z) : (y > z ? y : z);
 }
 

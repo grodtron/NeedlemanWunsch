@@ -7,7 +7,7 @@ using std::string;
 
 #include "../include/utils.cpp"
 // provides these two functions:
-// max(int, int, int)
+// template max(x, y, z)
 // template swap(a, b)
 
 // directional flags for matrixCell;
@@ -120,7 +120,7 @@ void NeedlemanWunsch::_init(){
             matrixCell vCell = matrix[i  ][j-1];
 
             // "this cell". I'm OCD about name lengths being the same
-            matrixCell tCell = matrix[i  ][j  ];
+            matrixCell tCell;
 
             // get the gap lengths that led up to
             // this cell from both directions
@@ -160,6 +160,8 @@ void NeedlemanWunsch::_init(){
             }else{
                tCell.hGapLen = 0;
             }
+
+            matrix[i][j] = tCell;
          }
       }
    }
