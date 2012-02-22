@@ -2,6 +2,5 @@
 *.swp
 *.swo
 .objects
-*.log
 nw
 nwvis
