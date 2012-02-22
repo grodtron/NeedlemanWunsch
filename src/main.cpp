@@ -29,6 +29,7 @@ int main(int argc, const char *argv[])
       return 1;
    }
 
+   
    tm.start();
    NewNeedlemanWunsch nnw(A, B);
    nnw.fullAlign();
@@ -36,10 +37,12 @@ int main(int argc, const char *argv[])
    cout << tm.duration() << ' ';
 
    tm.start();
-   NewNeedlemanWunsch onw(A, B);
+   OldNeedlemanWunsch onw(A, B);
    onw.fullAlign();
    tm.stop();
    cout << tm.duration() << endl;
+
+   //onw.print();
    
    return 0;
 }

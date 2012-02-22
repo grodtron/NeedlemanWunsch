@@ -33,7 +33,7 @@ class OldNeedlemanWunsch{
 
       // the outputted aligned strings
       vector<alignment*> alignments;
-      tree* paths;
+      //tree* paths;
 
       // the F matrix
       int width;
@@ -132,7 +132,7 @@ void OldNeedlemanWunsch::_fullAlign(
       alignments.push_back(al);
    }
 
-   return root;
+   //return root;
 }
 
 int OldNeedlemanWunsch::similarity(char a, char b){
@@ -151,17 +151,19 @@ int OldNeedlemanWunsch::similarity(char a, char b){
 // constructor!
 //
 OldNeedlemanWunsch::OldNeedlemanWunsch(string a, string b)
-: A(a), B(b), paths(NULL), F(NULL), similarityFunction(NULL)
+//: A(a), B(b), paths(NULL), F(NULL), similarityFunction(NULL)
+: A(a), B(b), F(NULL), similarityFunction(NULL)
 {
    width  = A.size();
    height = B.size();
    _init();
 }
 
+/*
 OldNeedlemanWunsch::~OldNeedlemanWunsch(){
 
 }
-
+*/
 // print the whole thing
 void OldNeedlemanWunsch::print(){
    if(&alignments){
