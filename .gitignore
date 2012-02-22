@@ -4,3 +4,4 @@
 .objects
 nw
 nwvis
+src/qwertyDistance.cpp

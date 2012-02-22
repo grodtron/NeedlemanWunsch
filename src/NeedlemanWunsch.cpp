@@ -10,6 +10,10 @@ using std::string;
 // template max(x, y, z)
 // template swap(a, b)
 
+const char MATCH = 'M';
+const char MISMATCH = 'm';
+const char GAP = 'g';
+
 // directional flags for matrixCell;
 const unsigned char VERTICAL   = 1 << 0;
 const unsigned char DIAGONAL   = 1 << 1;
@@ -19,7 +23,7 @@ const unsigned char HORIZONTAL = 1 << 2;
 // and holds traceback information as well
 struct matrixCell{
    // the score at this point inside the matrix
-   char score;
+   int score;
    // a set of flags indicating the possible directions
    // for this position in the matrix
    unsigned char direction;
@@ -39,6 +43,10 @@ class NeedlemanWunsch{
 
       string alignedA;
       string alignedB;
+      // holds info on whether the match is a match, mismatch or gap at that position
+      string matchType;
+
+      int score;
 
       // the score matrix
       int width;
@@ -129,9 +137,9 @@ void NeedlemanWunsch::_init(){
 
             // get the possible scores for this cell, keep
             // the max of the three possibilities
-            char dScore = dCell.score + similarity(A[i], B[j]);
-            char hScore = hCell.score + gapPenalty(hGapLen);
-            char vScore = vCell.score + gapPenalty(vGapLen);
+            int dScore = dCell.score + similarity(A[i], B[j]);
+            int hScore = hCell.score + gapPenalty(hGapLen);
+            int vScore = vCell.score + gapPenalty(vGapLen);
 
             tCell.score = max(dScore, vScore, hScore);
 
@@ -165,6 +173,7 @@ void NeedlemanWunsch::_init(){
          }
       }
    }
+   score = matrix[width-1][height-1].score;
 }
 
 void NeedlemanWunsch::_traceBack(){
@@ -180,23 +189,45 @@ void NeedlemanWunsch::_traceBack(){
    // re-init the aligned strings
    alignedA = "";
    alignedB = "";
+   matchType= "";
 
    // while we're not at the end point
    // (matrix[0][0] is the only cell with direction == 0)
-   while(matrix[i][j].direction){
+   while(1){
       if(matrix[i][j].direction & DIAGONAL){
          alignedA.push_back(A[i]);
          alignedB.push_back(B[j]);
+         matchType.push_back(A[i] == B[j] ? MATCH : MISMATCH);
          --i;
          --j;
+         if(j == 0 && i == 0){
+            alignedA.push_back(A[i]);
+            alignedB.push_back(B[j]);
+            matchType.push_back(A[i] == B[j] ? MATCH : MISMATCH);
+            break;
+         }
       }else if(matrix[i][j].direction & HORIZONTAL){
          alignedA.push_back(A[i]);
          alignedB.push_back('-');
+         matchType.push_back(GAP);
          --i;
+         if(j == 0 && i == 0){
+            alignedA.push_back(A[i]);
+            alignedB.push_back('-');
+            matchType.push_back(GAP);
+            break;
+         }
       }else if(matrix[i][j].direction & VERTICAL){
          alignedA.push_back('-');
          alignedB.push_back(B[j]);
+         matchType.push_back(GAP);
          --j;
+         if(j == 0 && i == 0){
+            alignedA.push_back('-');
+            alignedB.push_back(B[j]);
+            matchType.push_back(GAP);
+            break;
+         }
       }
    }
 
@@ -259,21 +290,30 @@ void NeedlemanWunsch::print(){
    // because the alignment process produces them backwards
    if(alignedA.size()){
 
-      string::reverse_iterator it;
-      string::reverse_iterator end;
+      cout << "Score: " << (int)score << endl;
 
-      for(it = alignedA.rbegin(),
-          end = alignedA.rend();
-          it != end; ++it
-      ){
-         cout.put(*it);
+      for(int i = alignedA.size() - 1; i >= 0; --i){
+         if(matchType[i] == MATCH){
+            cout << "\033[1;102;90m"; // bold, Green bg, grey fg
+         }else if(matchType[i] == MISMATCH){
+            cout << "\033[1;91m";     // bold, red
+         }else{
+            cout << "\033[90m";       // grey
+         }
+         cout.put(alignedA[i]);
+         cout << "\033[0m"; // reset
       }
       cout << endl;
-      for(it = alignedB.rbegin(),
-          end = alignedB.rend();
-          it != end; ++it
-      ){
-         cout.put(*it);
+      for(int i = alignedB.size() - 1; i >= 0; --i){
+         if(matchType[i] == MATCH){
+            cout << "\033[1;102;90m"; // bold, Green bg, grey fg
+         }else if(matchType[i] == MISMATCH){
+            cout << "\033[1;91m";     // bold, red
+         }else{
+            cout << "\033[90m";       // grey
+         }
+         cout.put(alignedB[i]);
+         cout << "\033[0m"; // reset
       }
       cout << endl;
 

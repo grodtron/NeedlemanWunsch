@@ -8,7 +8,7 @@ using std::string;
 // and holds traceback information as well
 struct matrixCell{
    // the score at this point inside the matrix
-   char score;
+   int score;
    // a set of flags indicating the possible directions
    // for this position in the matrix
    unsigned char direction;
@@ -28,6 +28,9 @@ class NeedlemanWunsch{
 
       string alignedA;
       string alignedB;
+      string matchType;
+
+      int score;
 
       // the score matrix
       int width;
