@@ -1,12 +1,5 @@
-#ifndef NeedlemanWunsch_H
-#define NeedlemanWunsch_H
-
-#include <iostream>
-using std::cout;
-using std::endl;
-
-#include <algorithm>
-using std::copy;
+#ifndef NeedlemanWunsch_H_
+#define NeedlemanWunsch_H_
 
 #include <deque>
 using std::deque;
@@ -14,38 +7,12 @@ using std::deque;
 #include <vector>
 using std::vector;
 
-#include <map>
-using std::map;
-
-#include <utility>
-using std::pair;
-
 #include <string>
 using std::string;
-
-#if __GNUC__ == 4
-#if __GNUC_MINOR__ < 3
-#include <tr1/memory>
-using std::tr1::shared_ptr;
-#else
-#include <memory>
-using std::shared_ptr;
-#endif
-#else
-This is some garbage incase __GNUC__ is less than four
-#endif
 
 struct alignment{
    string A;
    string B;
-};
-
-struct tree{
-   shared_ptr<struct tree> left;
-   shared_ptr<struct tree> center;
-   shared_ptr<struct tree> right;
-   int i;
-   int j;
 };
 
 class NeedlemanWunsch{
@@ -56,8 +23,7 @@ class NeedlemanWunsch{
 
       // the outputted aligned strings
       vector<alignment*> alignments;
-      tree* paths;
-      map<pair<int, int>, tree*> knownNodes;
+      //tree* paths;
 
       // the F matrix
       int width;
@@ -68,7 +34,7 @@ class NeedlemanWunsch{
       void _init();
 
       // align the strings
-      tree* _fullAlign(deque<char>*, deque<char>*, int, int);
+      void _fullAlign(deque<char>*, deque<char>*, int, int);
 
       // get similarity between two chars
       int similarity(char a, char b);

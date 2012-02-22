@@ -6,43 +6,28 @@ using std::cin;
 #include <string>
 using std::string;
 
-#include "../include/old_NW.h"
-#include "../include/new_NW.h"
-#include "../include/timer.h"
-
+#include "../include/NeedlemanWunsch.h"
 
 int main(int argc, const char *argv[])
 {
 
-   Timer tm;
-
    string A, B;
 
+   // get strings to aline from command line args, otherwise ask for them:
    if(argc == 3){
       A = argv[1];
       B = argv[2];
    }else if(argc == 1){
-      cout << "Enter two strings to be aligned: ";
+      cout << "Enter two strings to be aligned: " << endl << endl;
       cin >> A >> B;
    }else{
-      cout << "Received bad args (got " << argc << ", should be 2 or 0)." << endl;
+      cout << "Received bad args (got " << argc-1 << ", should be 2 or 0)." << endl;
       return 1;
    }
-
    
-   tm.start();
-   NewNeedlemanWunsch nnw(A, B);
-   nnw.fullAlign();
-   tm.stop();
-   cout << tm.duration() << ' ';
-
-   tm.start();
-   OldNeedlemanWunsch onw(A, B);
-   onw.fullAlign();
-   tm.stop();
-   cout << tm.duration() << endl;
-
-   //onw.print();
+   NeedlemanWunsch nw(A, B);
+   nw.fullAlign();
+   nw.print();
    
    return 0;
 }

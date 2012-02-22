@@ -25,7 +25,7 @@ struct alignment{
    string B;
 };
 
-class OldNeedlemanWunsch{
+class NeedlemanWunsch{
 
       // the input strings
       string A;
@@ -52,7 +52,7 @@ class OldNeedlemanWunsch{
       int (*similarityFunction)(char a, char b);
 
    public:
-      OldNeedlemanWunsch(string a, string b);
+      NeedlemanWunsch(string a, string b);
       void print();
       int getF(int i, int j);
       void setSimilarityFunction(int (*f)(char, char));
@@ -65,7 +65,7 @@ class OldNeedlemanWunsch{
 //                                         //
 /////////////////////////////////////////////
 
-void OldNeedlemanWunsch::_init(){
+void NeedlemanWunsch::_init(){
 
    delete F;
    F = NULL;
@@ -88,7 +88,7 @@ void OldNeedlemanWunsch::_init(){
    }
 }
 
-void OldNeedlemanWunsch::_fullAlign(
+void NeedlemanWunsch::_fullAlign(
    deque<char> * ancestryA,
    deque<char> * ancestryB,
    int i, int j
@@ -135,7 +135,7 @@ void OldNeedlemanWunsch::_fullAlign(
    //return root;
 }
 
-int OldNeedlemanWunsch::similarity(char a, char b){
+int NeedlemanWunsch::similarity(char a, char b){
    if(similarityFunction){
       return similarityFunction(a, b);
    }
@@ -150,7 +150,7 @@ int OldNeedlemanWunsch::similarity(char a, char b){
 
 // constructor!
 //
-OldNeedlemanWunsch::OldNeedlemanWunsch(string a, string b)
+NeedlemanWunsch::NeedlemanWunsch(string a, string b)
 //: A(a), B(b), paths(NULL), F(NULL), similarityFunction(NULL)
 : A(a), B(b), F(NULL), similarityFunction(NULL)
 {
@@ -160,12 +160,12 @@ OldNeedlemanWunsch::OldNeedlemanWunsch(string a, string b)
 }
 
 /*
-OldNeedlemanWunsch::~OldNeedlemanWunsch(){
+NeedlemanWunsch::~NeedlemanWunsch(){
 
 }
 */
 // print the whole thing
-void OldNeedlemanWunsch::print(){
+void NeedlemanWunsch::print(){
    if(&alignments){
 
       vector<alignment*>::iterator it = alignments.begin();
@@ -181,15 +181,15 @@ void OldNeedlemanWunsch::print(){
 
 }
 
-int OldNeedlemanWunsch::getF(int i, int j){
+int NeedlemanWunsch::getF(int i, int j){
    return F->at(i)->at(j);
 }
 
-void OldNeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
+void NeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
    similarityFunction = f;
 }
 
-void OldNeedlemanWunsch::fullAlign(){
+void NeedlemanWunsch::fullAlign(){
 
    deque<char> * ancestryA = new deque<char>();
    deque<char> * ancestryB = new deque<char>();
