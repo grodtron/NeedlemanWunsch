@@ -32,15 +32,14 @@ using std::shared_ptr;
 This is some garbage incase __GNUC__ is less than four to make g++ barf
 #endif
 
+#include "../include/utils.h"
+// max(int, int, int)
+
 typedef pair<string, string> alignment;
 typedef vector< alignment > alignmentVector; 
 typedef map< pair<int, int>, alignmentVector* > svpCoordMap;
 
-int max(int x, int y, int z){
-   return (x > y) ? (x > z ? x : z) : (y > z ? y : z);
-}
-
-class NeedlemanWunsch{
+class NewNeedlemanWunsch{
 
       // the input strings
       string A;
@@ -59,8 +58,7 @@ class NeedlemanWunsch{
       void _init();
 
       // align the strings
-      alignmentVector * _fastAlign(int, int);
-      alignmentVector * _slowAlign(int, int);
+      alignmentVector * _fullAlign(int, int);
 
       // get similarity between two chars
       int similarity(char a, char b);
@@ -68,13 +66,12 @@ class NeedlemanWunsch{
       int (*similarityFunction)(char a, char b);
 
    public:
-      NeedlemanWunsch(string a, string b);
-      ~NeedlemanWunsch();
+      NewNeedlemanWunsch(string a, string b);
+      ~NewNeedlemanWunsch();
       void print();
       int getF(int i, int j);
       void setSimilarityFunction(int (*f)(char, char));
-      void fastAlign();
-      void slowAlign();
+      void fullAlign();
 };
 
 /////////////////////////////////////////////
@@ -83,7 +80,7 @@ class NeedlemanWunsch{
 //                                         //
 /////////////////////////////////////////////
 
-void NeedlemanWunsch::_init(){
+void NewNeedlemanWunsch::_init(){
 
    delete F;
    F = NULL;
@@ -131,7 +128,7 @@ void copyAndAppend(alignmentVector * from, alignmentVector * to, char appendFirs
    }
 }
 
-alignmentVector * NeedlemanWunsch::_fastAlign(int i, int j){
+alignmentVector * NewNeedlemanWunsch::_fullAlign(int i, int j){
 
    alignmentVector * strings = new alignmentVector;
 
@@ -143,23 +140,23 @@ alignmentVector * NeedlemanWunsch::_fastAlign(int i, int j){
    int score = F->at(i)->at(j);
 
    if(ret.second){
-      cout << "New node inserted " << i << ' ' << j << endl;
+      //cout << "New node inserted " << i << ' ' << j << endl;
    }else{
-      cout << "\tDuplicate node not inserted " << i << ' ' << j << endl;
+      //cout << "\tDuplicate node not inserted " << i << ' ' << j << endl;
       delete strings;
       return ret.first->second;
    }
 
    if(i > 0 && F->at(i-1)->at(j) == score ){
-      tempStrings = _fastAlign(i-1, j);
+      tempStrings = _fullAlign(i-1, j);
       copyAndAppend(tempStrings, strings, A[i], '-');
    }
    if(j > 0 && F->at(i)->at(j-1) == score ){
-      tempStrings = _fastAlign(i, j-1);
+      tempStrings = _fullAlign(i, j-1);
       copyAndAppend(tempStrings, strings, '-', B[j]);
    }
    if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == score ){
-      tempStrings = _fastAlign(i-1, j-1);
+      tempStrings = _fullAlign(i-1, j-1);
       copyAndAppend(tempStrings, strings, A[i], B[j]);
    }
 
@@ -170,7 +167,7 @@ alignmentVector * NeedlemanWunsch::_fastAlign(int i, int j){
    return strings;
 }
 
-int NeedlemanWunsch::similarity(char a, char b){
+int NewNeedlemanWunsch::similarity(char a, char b){
    if(similarityFunction){
       return similarityFunction(a, b);
    }
@@ -185,7 +182,7 @@ int NeedlemanWunsch::similarity(char a, char b){
 
 // constructor!
 //
-NeedlemanWunsch::NeedlemanWunsch(string a, string b)
+NewNeedlemanWunsch::NewNeedlemanWunsch(string a, string b)
 : A(a), B(b), alignments(NULL), F(NULL), similarityFunction(NULL)
 {
    width  = A.size();
@@ -194,7 +191,7 @@ NeedlemanWunsch::NeedlemanWunsch(string a, string b)
 }
 
 // destructor!
-NeedlemanWunsch::~NeedlemanWunsch(){
+NewNeedlemanWunsch::~NewNeedlemanWunsch(){
    if(F){
       vector<vector<int>* >::iterator it = F->begin();
       vector<vector<int>* >::iterator end = F->end();
@@ -216,7 +213,7 @@ NeedlemanWunsch::~NeedlemanWunsch(){
 }
 
 // print the whole thing
-void NeedlemanWunsch::print(){
+void NewNeedlemanWunsch::print(){
    if(alignments){
 
       alignmentVector::iterator it = alignments->begin();
@@ -232,21 +229,21 @@ void NeedlemanWunsch::print(){
 
 }
 
-int NeedlemanWunsch::getF(int i, int j){
+int NewNeedlemanWunsch::getF(int i, int j){
    return F->at(i)->at(j);
 }
 
-void NeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
+void NewNeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
    similarityFunction = f;
 }
 
-void NeedlemanWunsch::fastAlign(){
+void NewNeedlemanWunsch::fullAlign(){
 
    // TODO proper destructor!
    //if(paths) delete paths;
 
    //paths = 
-   alignments = _fastAlign(
+   alignments = _fullAlign(
       F->size() - 1,
       F->at(0)->size() - 1
    );
