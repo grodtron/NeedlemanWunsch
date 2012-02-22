@@ -2,27 +2,33 @@
 using std::cout;
 using std::endl;
 
-#include <algorithm>
-using std::copy;
-
-#include <deque>
-using std::deque;
-
-#include <vector>
-using std::vector;
-
-#include <utility>
-using std::pair;
-
 #include <string>
 using std::string;
 
-#include "../include/utils.h"
+#include "../include/utils.cpp"
+// provides these two functions:
 // max(int, int, int)
+// template swap(a, b)
 
-struct alignment{
-   string A;
-   string B;
+// directional flags for matrixCell;
+const unsigned char VERTICAL   = 1 << 0;
+const unsigned char DIAGONAL   = 1 << 1;
+const unsigned char HORIZONTAL = 1 << 2;
+
+// This struct represents each cell in the score matrix
+// and holds traceback information as well
+struct matrixCell{
+   // the score at this point inside the matrix
+   char score;
+   // a set of flags indicating the possible directions
+   // for this position in the matrix
+   unsigned char direction;
+   // the length of the horizontal gap that leads to this
+   // cell. This is used for calculating constant and affine
+   // gap penalties
+   int hGapLen;
+   // same as hGapLen, except for vertical gaps
+   int vGapLen;
 };
 
 class NeedlemanWunsch{
@@ -31,32 +37,34 @@ class NeedlemanWunsch{
       string A;
       string B;
 
-      // the outputted aligned strings
-      vector<alignment*> alignments;
-      //tree* paths;
+      string alignedA;
+      string alignedB;
 
-      // the F matrix
+      // the score matrix
       int width;
       int height;
-      vector< vector<int>* >* F;
+      matrixCell ** matrix;
 
-      // initialize the F matrix
+      // initialize the matrix
       void _init();
 
-      // align the strings
-      void _fullAlign(deque<char>*, deque<char>*, int, int);
+      // get alignment from initialized matrix
+      void _traceBack();
 
       // get similarity between two chars
       int similarity(char a, char b);
-
       int (*similarityFunction)(char a, char b);
+      
+      int gapPenalty(int gapLength);
+      int (*gapPenaltyFunction)(int gapLength);
 
    public:
       NeedlemanWunsch(string a, string b);
+      ~NeedlemanWunsch();
       void print();
-      int getF(int i, int j);
       void setSimilarityFunction(int (*f)(char, char));
-      void fullAlign();
+      void setGapPenaltyFunction(int (*f)(int));
+      void align();
 };
 
 /////////////////////////////////////////////
@@ -67,79 +75,146 @@ class NeedlemanWunsch{
 
 void NeedlemanWunsch::_init(){
 
-   delete F;
-   F = NULL;
-
-   F = new vector< vector<int>* >(width);
+   bool notYetAllocated = false;
+   // allocate matrix if it hasn't been already
+   if(!matrix){
+      matrix = new matrixCell*[width];
+      notYetAllocated = true;
+   }
 
    for(int i = 0; i < width; ++i){
-      F->at(i) = new vector<int>(height);
+
+      // if the matrix hasn't already been allocated, then we need
+      // to allocate space for each column
+      if (notYetAllocated){
+         matrix[i] = new matrixCell[height];
+      }
+
       for(int j = 0; j < height; ++j){
-         if(i == 0 || j == 0){
-            F->at(i)->at(j) = 0;
+         if(i == 0 && j == 0){
+            // gap lengths, score and directions all zero
+            // this is the cell that is the endpoint of the
+            // matrix (top left corner)
+            matrix[i][j] = {0,0,0,0};
+         }else if(i == 0){
+            // these are the cells along the left-hand vertical edge
+            // there gap length is their position, and their score is
+            // the previous score + the gapPenalty for their position
+            // they have only one possible direction, which is vertical (up)
+            matrix[0][j].score = matrix[0][j-1].score + gapPenalty(j);
+            matrix[0][j].hGapLen = 0;
+            matrix[0][j].vGapLen = j;
+            matrix[0][j].direction = VERTICAL;
+         }else if(j == 0){
+            // this is the same initialization as above, except for the cells along
+            // the top horizontal edge
+            matrix[i][0].score = matrix[i-1][0].score + gapPenalty(i);
+            matrix[i][0].hGapLen = i;
+            matrix[i][0].vGapLen = 0;
+            matrix[i][0].direction = HORIZONTAL;
          }else{
-            F->at(i)->at(j) = max(
-               F->at(i-1)->at(j-1) + similarity(A[i], B[j]),
-               F->at(i-1)->at(j  ),
-               F->at(i  )->at(j-1)
-            );
+
+            // get the cells that we are working with
+            matrixCell dCell = matrix[i-1][j-1];
+            matrixCell hCell = matrix[i-1][j  ];
+            matrixCell vCell = matrix[i  ][j-1];
+
+            // "this cell". I'm OCD about name lengths being the same
+            matrixCell tCell = matrix[i  ][j  ];
+
+            // get the gap lengths that led up to
+            // this cell from both directions
+            int hGapLen = hCell.hGapLen + 1;
+            int vGapLen = vCell.vGapLen + 1;
+
+            // get the possible scores for this cell, keep
+            // the max of the three possibilities
+            char dScore = dCell.score + similarity(A[i], B[j]);
+            char hScore = hCell.score + gapPenalty(hGapLen);
+            char vScore = vCell.score + gapPenalty(vGapLen);
+
+            tCell.score = max(dScore, vScore, hScore);
+
+            // Since it's possible for multiple directions to give
+            // the same score, we check for all of the possibilities,
+            // and update the direction flags of this cell, which are
+            // used in the traceback phase.
+            tCell.direction = 0;
+            if(tCell.score == dScore){
+               tCell.direction |= DIAGONAL;
+            }
+
+            // for the vertical and horizontal paths, we also update
+            // the gap length at this cell for use by descendant cells
+            // zero indicates that there was no gap leading to this cell
+            if(tCell.score == vScore){
+               tCell.direction |= VERTICAL;
+               tCell.vGapLen = vGapLen;
+            }else{
+               tCell.vGapLen = 0;
+            }
+
+            if(tCell.score == hScore){
+               tCell.direction |= HORIZONTAL;
+               tCell.hGapLen = hGapLen;
+            }else{
+               tCell.hGapLen = 0;
+            }
          }
       }
    }
 }
 
-void NeedlemanWunsch::_fullAlign(
-   deque<char> * ancestryA,
-   deque<char> * ancestryB,
-   int i, int j
-){
+void NeedlemanWunsch::_traceBack(){
+   // This function follows the directions at each matrix cell
+   // since all possible alignments are equally scoring, we will
+   // favor the ones that are most diagonal first, and the ones
+   // that tend towards adding gaps to the shorter of the two
+   // strings second
 
-   int score = F->at(i)->at(j);
+   int i = width - 1;
+   int j = height- 1;
 
-   if(i > 0 && F->at(i-1)->at(j) == score ){
-      ancestryA->push_back(A[i]);// no gap
-      ancestryB->push_back('-'); // gap
-      _fullAlign(ancestryA, ancestryB, i-1, j);
-      ancestryA->pop_back();
-      ancestryB->pop_back();
-   }
-   if(j > 0 && F->at(i)->at(j-1) == score ){
-      ancestryA->push_back('-'); // gap
-      ancestryB->push_back(B[j]);// no gap
-      _fullAlign(ancestryA, ancestryB, i, j-1);
-      ancestryA->pop_back();
-      ancestryB->pop_back();
-   }
-   if(i > 0 && j > 0 && F->at(i-1)->at(j-1) + similarity(A[i], B[j]) == score ){
-      ancestryA->push_back(A[i]);// no gap
-      ancestryB->push_back(B[j]);// no gap
-      _fullAlign(ancestryA, ancestryB, i-1, j-1);
-      ancestryA->pop_back();
-      ancestryB->pop_back();
-   }
+   // re-init the aligned strings
+   alignedA = "";
+   alignedB = "";
 
-   // this means we're at a leaf node
-   // copy the current deques into the alignment
-   // vector to save them
-   if(i == 0 && j == 0){
-      alignment * al = new alignment;
-
-      // push back the current alignment
-
-      al->A.assign(ancestryA->begin(), ancestryA->end());
-      al->B.assign(ancestryB->begin(), ancestryB->end());
-
-      alignments.push_back(al);
+   // while we're not at the end point
+   // (matrix[0][0] is the only cell with direction == 0)
+   while(matrix[i][j].direction){
+      if(matrix[i][j].direction & DIAGONAL){
+         alignedA.push_back(A[i]);
+         alignedB.push_back(B[j]);
+         --i;
+         --j;
+      }else if(matrix[i][j].direction & HORIZONTAL){
+         alignedA.push_back(A[i]);
+         alignedB.push_back('-');
+         --i;
+      }else if(matrix[i][j].direction & VERTICAL){
+         alignedA.push_back('-');
+         alignedB.push_back(B[j]);
+         --j;
+      }
    }
 
-   //return root;
+   //that's it
+   
 }
+
 
 int NeedlemanWunsch::similarity(char a, char b){
    if(similarityFunction){
       return similarityFunction(a, b);
    }
    return a == b ? 3 : -1;
+}
+
+int NeedlemanWunsch::gapPenalty(int length){
+   if(gapPenaltyFunction){
+      return gapPenaltyFunction(length);
+   }
+   return -1;
 }
 
 /////////////////////////////////////////////
@@ -151,29 +226,54 @@ int NeedlemanWunsch::similarity(char a, char b){
 // constructor!
 //
 NeedlemanWunsch::NeedlemanWunsch(string a, string b)
-//: A(a), B(b), paths(NULL), F(NULL), similarityFunction(NULL)
-: A(a), B(b), F(NULL), similarityFunction(NULL)
+: A(a), B(b), matrix(NULL), similarityFunction(NULL), gapPenaltyFunction(NULL)
 {
    width  = A.size();
    height = B.size();
-   _init();
+   // make sure that the width of the matrix is greater than the height
+   // this is so that creating gaps in the shorter of the two sequences
+   // is favoured over gaps in the longer of the two
+   if(height > width){
+      swap(A, B);
+      swap(width, height);
+   }
 }
 
-/*
+// just have to make sure that the matrix is freed
 NeedlemanWunsch::~NeedlemanWunsch(){
+   if(matrix){
+      for(int i = 0; i < width; ++i){
+         delete[] matrix[i];
+         matrix[i] = NULL;
+      }
+      delete[] matrix;
+   }
 
 }
-*/
+
 // print the whole thing
 void NeedlemanWunsch::print(){
-   if(&alignments){
+   // have to print the strings char by char using reverse iterators
+   // because the alignment process produces them backwards
+   if(alignedA.size()){
 
-      vector<alignment*>::iterator it = alignments.begin();
-      vector<alignment*>::iterator end= alignments.end();
-      for(; it != end; ++it){
-         cout << (*it)->A  << endl << (*it)->B << endl;
-         cout << "================================" <<endl;
+      string::reverse_iterator it;
+      string::reverse_iterator end;
+
+      for(it = alignedA.rbegin(),
+          end = alignedA.rend();
+          it != end; ++it
+      ){
+         cout.put(*it);
       }
+      cout << endl;
+      for(it = alignedB.rbegin(),
+          end = alignedB.rend();
+          it != end; ++it
+      ){
+         cout.put(*it);
+      }
+      cout << endl;
 
    }else{
       cout << "Not yet aligned" << endl;
@@ -181,27 +281,16 @@ void NeedlemanWunsch::print(){
 
 }
 
-int NeedlemanWunsch::getF(int i, int j){
-   return F->at(i)->at(j);
-}
-
 void NeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){
    similarityFunction = f;
 }
 
-void NeedlemanWunsch::fullAlign(){
+void NeedlemanWunsch::setGapPenaltyFunction(int (*f)(int)){
+   gapPenaltyFunction = f;
+}
 
-   deque<char> * ancestryA = new deque<char>();
-   deque<char> * ancestryB = new deque<char>();
-
-   _fullAlign(
-      ancestryA,
-      ancestryB,
-      F->size() - 1,
-      F->at(0)->size() - 1
-   );
-
-   delete ancestryA;
-   delete ancestryB;
+void NeedlemanWunsch::align(){
+   _init();
+   _traceBack();
 }
 

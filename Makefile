@@ -28,7 +28,7 @@ endif
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, main.o NeedlemanWunsch.o utils.o)
+OBJS=$(addprefix $(OBJ_DIR)/, main.o NeedlemanWunsch.o)
 
 executable=nw
 

@@ -26,7 +26,7 @@ int main(int argc, const char *argv[])
    }
    
    NeedlemanWunsch nw(A, B);
-   nw.fullAlign();
+   nw.align();
    nw.print();
    
    return 0;
