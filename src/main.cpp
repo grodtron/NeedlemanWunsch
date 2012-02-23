@@ -89,8 +89,7 @@ int main(int argc, const char *argv[])
 
    Alignment::printHeader(cout, Alignment::HTML);
 
-   // print above-average scores
-   for(; it->getScore() > averageScore; ++it){
+   for(; it != end; ++it){
       it->print(cout, Alignment::HTML);
       it->print(cerr, Alignment::CONSOLE);
    }

@@ -39,6 +39,7 @@ void Alignment::printHeader(ostream & stream, int format){
              << "   background:black;"      << endl
              << "   font-family:monospace;" << endl
              << "   font-size:10px;"        << endl
+             << "   overflow-x:auto;"       << endl
              << "}"                         << endl
              << ".NW_mismatch{"             << endl
              << "   color:red;"             << endl
