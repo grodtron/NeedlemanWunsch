@@ -33,7 +33,7 @@ def findpos(c):
 
 charrange = list(range(ord(' '), ord('~') + 1))
 
-offset = 1
+offset = 2
 
 matrix = [ list(charrange) for n in charrange ]
 

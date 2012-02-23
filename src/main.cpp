@@ -45,6 +45,7 @@ int main(int argc, const char *argv[])
 {
 
    string A, B;
+   Alignment alignment;
 
    // get strings to aline from command line args, otherwise ask for them:
    if(argc == 3){
@@ -62,24 +63,24 @@ int main(int argc, const char *argv[])
    nw.setSimilarityFunction(qwertyDistanceSimilarity);
 
    nw.setGapPenaltyFunction(linearGapPenalty);
-   nw.align();
+   nw.align(alignment);
    cout << endl << "Alignment using linear penalty:" << endl;
-   nw.print();
+   alignment.print();
 
    nw.setGapPenaltyFunction(affineGapPenalty);
-   nw.align();
+   nw.align(alignment);
    cout << endl << "Alignment using affine penalty:" << endl;
-   nw.print();
+   alignment.print();
 
    nw.setGapPenaltyFunction(constantGapPenalty);
-   nw.align();
+   nw.align(alignment);
    cout << endl << "Alignment using constant penalty:" << endl;
-   nw.print();
+   alignment.print();
 
    nw.setGapPenaltyFunction(zeroGapPenalty);
-   nw.align();
+   nw.align(alignment);
    cout << endl << "Alignment using zero penalty:" << endl;
-   nw.print();
+   alignment.print();
    
    return 0;
 }
