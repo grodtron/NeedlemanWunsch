@@ -13,82 +13,15 @@ using std::copy;
 // template max(x, y, z)
 // template swap(a, b)
 
-const char MATCH = 'M';
-const char MISMATCH = 'm';
-const char GAP = 'g';
+#include "../include/Alignment.h"
+
+#include "../include/NeedlemanWunsch.h"
 
 // directional flags for matrixCell;
-const unsigned char VERTICAL   = 1 << 0;
-const unsigned char DIAGONAL   = 1 << 1;
-const unsigned char HORIZONTAL = 1 << 2;
+const unsigned char NeedlemanWunsch::VERTICAL   = 1 << 0;
+const unsigned char NeedlemanWunsch::DIAGONAL   = 1 << 1;
+const unsigned char NeedlemanWunsch::HORIZONTAL = 1 << 2;
 
-// This struct represents each cell in the score matrix
-// and holds traceback information as well
-struct matrixCell{
-   // the score at this point inside the matrix
-   int score;
-   // a set of flags indicating the possible directions
-   // for this position in the matrix
-   unsigned char direction;
-   // the length of the horizontal gap that leads to this
-   // cell. This is used for calculating constant and affine
-   // gap penalties
-   int hGapLen;
-   // same as hGapLen, except for vertical gaps
-   int vGapLen;
-};
-
-class NeedlemanWunsch;
-
-class Alignment{
-      friend class NeedlemanWunsch;
-      friend bool operator< (const Alignment & a, const Alignment & b);
-      friend bool operator> (const Alignment & a, const Alignment & b);
-      string A;
-      string B;
-      string matchType;
-      int score;
-   public:
-      void print() const;
-};
-
-class NeedlemanWunsch{
-
-      // the input strings
-      string A;
-      string B;
-
-      Alignment alignment;
-
-      // the score matrix
-      int width;
-      int height;
-      matrixCell ** matrix;
-
-      // initialize the matrix
-      void _init();
-
-      // get alignment from initialized matrix
-      void _traceBack();
-
-      // get similarity between two chars
-      int similarity(char a, char b);
-      int (*similarityFunction)(char a, char b);
-      
-      int gapPenalty(int gapLength);
-      int (*gapPenaltyFunction)(int gapLength);
-
-      void deleteMatrix();
-
-   public:
-      NeedlemanWunsch(string a, string b);
-      NeedlemanWunsch();
-     ~NeedlemanWunsch();
-      void setSimilarityFunction(int (*f)(char, char));
-      void setGapPenaltyFunction(int (*f)(int));
-      void setStrings(string a, string b);
-      void align(Alignment &);
-};
 
 /////////////////////////////////////////////
 //                                         //
@@ -211,7 +144,7 @@ void NeedlemanWunsch::_traceBack(){
       if(matrix[i][j].direction & DIAGONAL){
          alignedA.push_back(A[i]);
          alignedB.push_back(B[j]);
-         matchType.push_back(A[i] == B[j] ? MATCH : MISMATCH);
+         matchType.push_back(A[i] == B[j] ? Alignment::MATCH : Alignment::MISMATCH);
          --i;
          --j;
          // TODO - all this stuff is supposed to be outside the loop
@@ -219,29 +152,29 @@ void NeedlemanWunsch::_traceBack(){
          if(j == 0 && i == 0){
             alignedA.push_back(A[i]);
             alignedB.push_back(B[j]);
-            matchType.push_back(A[i] == B[j] ? MATCH : MISMATCH);
+            matchType.push_back(A[i] == B[j] ? Alignment::MATCH : Alignment::MISMATCH);
             break;
          }
       }else if(matrix[i][j].direction & HORIZONTAL){
          alignedA.push_back(A[i]);
          alignedB.push_back('-');
-         matchType.push_back(GAP);
+         matchType.push_back(Alignment::GAP);
          --i;
          if(j == 0 && i == 0){
             alignedA.push_back(A[i]);
             alignedB.push_back('-');
-            matchType.push_back(GAP);
+            matchType.push_back(Alignment::GAP);
             break;
          }
       }else if(matrix[i][j].direction & VERTICAL){
          alignedA.push_back('-');
          alignedB.push_back(B[j]);
-         matchType.push_back(GAP);
+         matchType.push_back(Alignment::GAP);
          --j;
          if(j == 0 && i == 0){
             alignedA.push_back('-');
             alignedB.push_back(B[j]);
-            matchType.push_back(GAP);
+            matchType.push_back(Alignment::GAP);
             break;
          }
       }
@@ -332,47 +265,6 @@ void NeedlemanWunsch::setStrings(string a, string b){
       swap(A, B);
       swap(width, height);
    }
-}
-
-bool operator< (const Alignment & a, const Alignment & b){
-   return a.score < b.score;
-}
-
-bool operator> (const Alignment & a, const Alignment & b){
-   return a.score > b.score;
-}
-
-// print the whole thing
-void Alignment::print() const {
-   // have to print the strings char by char using reverse iterators
-   // because the alignment process produces them backwards
-   cout << "Score: " << score << endl;
-
-   int size = A.size();
-   for(int i = 0; i < size; ++i){
-      if(matchType[i] == MATCH){
-         cout << "\033[1;102;90m"; // bold, Green bg, grey fg
-      }else if(matchType[i] == MISMATCH){
-         cout << "\033[1;91m";     // bold, red
-      }else{
-         cout << "\033[90m";       // grey
-      }
-      cout.put(A[i]);
-      cout << "\033[0m"; // reset
-   }
-   cout << endl;
-   for(int i = 0; i < size; ++i){
-      if(matchType[i] == MATCH){
-         cout << "\033[1;102;90m"; // bold, Green bg, grey fg
-      }else if(matchType[i] == MISMATCH){
-         cout << "\033[1;91m";     // bold, red
-      }else{
-         cout << "\033[90m";       // grey
-      }
-      cout.put(B[i]);
-      cout << "\033[0m"; // reset
-   }
-   cout << endl;
 }
 
 void NeedlemanWunsch::setSimilarityFunction(int (*f)(char, char)){

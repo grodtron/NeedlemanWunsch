@@ -4,6 +4,8 @@
 #include <string>
 using std::string;
 
+#include "Alignment.h"
+
 // This struct represents each cell in the score matrix
 // and holds traceback information as well
 struct matrixCell{
@@ -18,20 +20,6 @@ struct matrixCell{
    int hGapLen;
    // same as hGapLen, except for vertical gaps
    int vGapLen;
-};
-
-class NeedlemanWunsch;
-
-class Alignment{
-      friend class NeedlemanWunsch;
-      friend bool operator< (const Alignment & a, const Alignment & b);
-      friend bool operator> (const Alignment & a, const Alignment & b);
-      string A;
-      string B;
-      string matchType;
-      int score;
-   public:
-      void print() const;
 };
 
 class NeedlemanWunsch{
@@ -60,6 +48,8 @@ class NeedlemanWunsch{
       int gapPenalty(int gapLength);
       int (*gapPenaltyFunction)(int gapLength);
 
+      void deleteMatrix();
+
    public:
       NeedlemanWunsch(string a, string b);
       NeedlemanWunsch();
@@ -68,6 +58,11 @@ class NeedlemanWunsch{
       void setGapPenaltyFunction(int (*f)(int));
       void setStrings(string a, string b);
       void align(Alignment &);
+
+      // directional flags for matrixCell;
+      static const unsigned char VERTICAL  ;
+      static const unsigned char DIAGONAL  ;
+      static const unsigned char HORIZONTAL;
 };
 
 #endif
