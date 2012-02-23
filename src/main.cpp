@@ -51,8 +51,10 @@ int main(int argc, const char *argv[])
       sentences.push_back(string(sentence));
    }
 
+   int averageScore = 0;
+
    // contain it and end within this block
-   cout << "working... ";
+   cerr << "working... ";
    {
       // run through and align each string with each other string.
       vector<string>::iterator it = sentences.begin();
@@ -63,10 +65,11 @@ int main(int argc, const char *argv[])
             nw.setStrings(*it, *jt);
             nw.align(alignment);
             alignments.push_back(alignment);
+            averageScore += alignment.getScore();
          }
       }
    }
-   cout << "done!" << endl;
+   cerr << "done!" << endl;
 
    sort(alignments.begin(), alignments.end());
 
@@ -75,11 +78,21 @@ int main(int argc, const char *argv[])
       return 0;
    }
 
-   vector<Alignment>::reverse_iterator it = alignments.rbegin();
-   vector<Alignment>::reverse_iterator end = it + alignments.size()/2;
+   cerr << "Total score: " << averageScore << endl;
+   averageScore /= alignments.size();
+   cerr << "average score" << averageScore << endl;
+   averageScore *= 3;
+   cerr << "3 * average score" << averageScore << endl;
 
-   for(; it != end; ++it){
-      it->print();
+   vector<Alignment>::reverse_iterator it = alignments.rbegin();
+   vector<Alignment>::reverse_iterator end = alignments.rend();
+
+   Alignment::printHeader(cout, Alignment::HTML);
+
+   // print above-average scores
+   for(; it->getScore() > averageScore; ++it){
+      it->print(cout, Alignment::HTML);
+      it->print(cerr, Alignment::CONSOLE);
    }
    
    return 0;

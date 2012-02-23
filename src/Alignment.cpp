@@ -1,9 +1,11 @@
 #include <iostream>
-using std::cout;
+using std::ostream;
 using std::endl;
 
 #include <string>
 using std::string;
+
+#include <cassert>
 
 #include "../include/NeedlemanWunsch.h"
 #include "../include/Alignment.h"
@@ -21,35 +23,81 @@ bool operator> (const Alignment & a, const Alignment & b){
    return a.score > b.score;
 }
 
+int Alignment::getScore() const{
+   return score;
+}
+
+const int Alignment::CONSOLE = 0;
+const int Alignment::HTML    = 1;
+
+void Alignment::printHeader(ostream & stream, int format){
+
+   // output the css for the html version
+   if(format == HTML){
+      stream << "<style>"                   << endl
+             << "body{"                     << endl
+             << "   background:black;"      << endl
+             << "   font-family:monospace;" << endl
+             << "   font-size:10px;"        << endl
+             << "}"                         << endl
+             << ".NW_mismatch{"             << endl
+             << "   color:red;"             << endl
+             << "}"                         << endl
+             << ".NW_gap{"                  << endl
+             << "   color:gray;"            << endl
+             << "}"                         << endl
+             << ".NW_match{"                << endl
+             << "   color:gray;"            << endl
+             << "   background-color:#0F0;" << endl
+             << "}"                         << endl
+             << "</style>"                  << endl;
+
+   }
+}
+
 // print the whole thing
-void Alignment::print() const {
+void Alignment::print(ostream & stream, int format) const {
    // have to print the strings char by char using reverse iterators
    // because the alignment process produces them backwards
-   cout << "Score: " << score << endl;
+   
+   assert((format == CONSOLE || format == HTML) && "invalid format type");
+   
+   const char * matchStrings[]    = {"\033[1;102;90m", "<span class = NW_match>"};
+   const char * mismatchStrings[] = {"\033[1;91m", "<span class = NW_mismatch>"};
+   const char * gapStrings[]      = {"\033[90m", "<span class = NW_gap>"};
+   const char * endStrings[]      = {"\033[0m", "</span>"};
 
-   int size = A.size();
-   for(int i = 0; i < size; ++i){
-      if(matchType[i] == MATCH){
-         cout << "\033[1;102;90m"; // bold, Green bg, grey fg
-      }else if(matchType[i] == MISMATCH){
-         cout << "\033[1;91m";     // bold, red
-      }else{
-         cout << "\033[90m";       // grey
+   const char * matchString    = matchStrings[format];
+   const char * mismatchString = mismatchStrings[format];
+   const char * gapString      = gapStrings[format];
+   const char * endString      = endStrings[format];
+
+   if(format == HTML) stream << "<pre>";
+   stream << "Score: " << score << endl;
+
+   string s = A;
+
+   do{
+      int size = s.size();
+      for(int i = 0; i < size; ++i){
+
+         if(i == 0 || matchType[i] != matchType[i - 1]){
+            if (i != 0) stream << endString;
+
+            if(matchType[i] == MATCH){
+               stream << matchString;
+            }else if(matchType[i] == MISMATCH){
+               stream << mismatchString;
+            }else{
+               stream << gapString;
+            }
+         }
+         stream.put(s[i]);
       }
-      cout.put(A[i]);
-      cout << "\033[0m"; // reset
-   }
-   cout << endl;
-   for(int i = 0; i < size; ++i){
-      if(matchType[i] == MATCH){
-         cout << "\033[1;102;90m"; // bold, Green bg, grey fg
-      }else if(matchType[i] == MISMATCH){
-         cout << "\033[1;91m";     // bold, red
-      }else{
-         cout << "\033[90m";       // grey
-      }
-      cout.put(B[i]);
-      cout << "\033[0m"; // reset
-   }
-   cout << endl;
+      stream << endString << endl;
+      // this is a funky loop that will execute once for A and once for B
+      // apparently you can't cast a string directly to a bool... who knew
+   }while(s == A && (s = B) == B);
+
+   if(format == HTML) stream << "</pre>";
 }

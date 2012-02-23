@@ -3,7 +3,7 @@
 *.swo
 .objects
 nw
-nwvis
 src/qwertyDistance.cpp
-twitter.txt
+*.txt
+*.html
 *.pyc
