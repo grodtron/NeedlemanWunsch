@@ -78,9 +78,11 @@ class NeedlemanWunsch{
 
    public:
       NeedlemanWunsch(string a, string b);
+      NeedlemanWunsch();
      ~NeedlemanWunsch();
       void setSimilarityFunction(int (*f)(char, char));
       void setGapPenaltyFunction(int (*f)(int));
+      void setStrings(string a, string b);
       void align(Alignment &);
 };
 
@@ -292,6 +294,11 @@ NeedlemanWunsch::NeedlemanWunsch(string a, string b)
    }
 }
 
+NeedlemanWunsch::NeedlemanWunsch()
+: A(""), B(""), width(0), height(0), matrix(NULL), similarityFunction(NULL), gapPenaltyFunction(NULL)
+{
+}
+
 // just have to make sure that the matrix is freed
 NeedlemanWunsch::~NeedlemanWunsch(){
    if(matrix){
@@ -302,6 +309,20 @@ NeedlemanWunsch::~NeedlemanWunsch(){
       delete[] matrix;
    }
 
+}
+
+void NeedlemanWunsch::setStrings(string a, string b){
+   A = a;
+   B = b;
+   width  = A.size();
+   height = B.size();
+   // make sure that the width of the matrix is greater than the height
+   // this is so that creating gaps in the shorter of the two sequences
+   // is favoured over gaps in the longer of the two
+   if(height > width){
+      swap(A, B);
+      swap(width, height);
+   }
 }
 
 // print the whole thing

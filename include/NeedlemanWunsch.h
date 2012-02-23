@@ -46,7 +46,9 @@ class NeedlemanWunsch{
 
    public:
       NeedlemanWunsch(string a, string b);
-      ~NeedlemanWunsch();
+      NeedlemanWunsch();
+     ~NeedlemanWunsch();
+      void setStrings(string a, string b);
       void setSimilarityFunction(int (*f)(char, char));
       void setGapPenaltyFunction(int (*f)(int));
       void align(Alignment &);

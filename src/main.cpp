@@ -8,38 +8,7 @@ using std::string;
 
 #include "../include/NeedlemanWunsch.h"
 #include "../include/qwertyDistance.h"
-
-/////////////////////////////////////////////////////////
-//   Gap Penalty Functions                             //
-/////////////////////////////////////////////////////////
-
-// all alignment gaps cost the same, no matter their length.
-// (-2)
-int constantGapPenalty(int gapLength){
-   return gapLength == 1 ? -4 : 0;
-}
-
-// Small alignments are expensive, but do not increase much in
-// price as their length increases. Penalties returned are:
-// 1 : -4
-// 2 : -2
-// 3 : -1
-// 4 : -1
-// 5 : 0
-// 6 : 0
-//   : 0
-int affineGapPenalty(int gapLength){
-   return -(3/gapLength);
-}
-
-// gap price grows linearly with its length
-int linearGapPenalty(int gapLength){
-   return -4;
-}
-
-int zeroGapPenalty(int gapLength){
-   return 0;
-}
+#include "../include/gapPenaltyFunctions.h"
 
 int main(int argc, const char *argv[])
 {
@@ -59,27 +28,12 @@ int main(int argc, const char *argv[])
       return 1;
    }
    
-   NeedlemanWunsch nw(A, B);
+   NeedlemanWunsch nw;
+   nw.setStrings(A, B);
    nw.setSimilarityFunction(qwertyDistanceSimilarity);
-
-   nw.setGapPenaltyFunction(linearGapPenalty);
-   nw.align(alignment);
-   cout << endl << "Alignment using linear penalty:" << endl;
-   alignment.print();
-
    nw.setGapPenaltyFunction(affineGapPenalty);
    nw.align(alignment);
-   cout << endl << "Alignment using affine penalty:" << endl;
-   alignment.print();
 
-   nw.setGapPenaltyFunction(constantGapPenalty);
-   nw.align(alignment);
-   cout << endl << "Alignment using constant penalty:" << endl;
-   alignment.print();
-
-   nw.setGapPenaltyFunction(zeroGapPenalty);
-   nw.align(alignment);
-   cout << endl << "Alignment using zero penalty:" << endl;
    alignment.print();
    
    return 0;
