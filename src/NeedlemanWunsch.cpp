@@ -42,6 +42,8 @@ class NeedlemanWunsch;
 
 class Alignment{
       friend class NeedlemanWunsch;
+      friend bool operator< (const Alignment & a, const Alignment & b);
+      friend bool operator> (const Alignment & a, const Alignment & b);
       string A;
       string B;
       string matchType;
@@ -75,6 +77,8 @@ class NeedlemanWunsch{
       
       int gapPenalty(int gapLength);
       int (*gapPenaltyFunction)(int gapLength);
+
+      void deleteMatrix();
 
    public:
       NeedlemanWunsch(string a, string b);
@@ -301,6 +305,10 @@ NeedlemanWunsch::NeedlemanWunsch()
 
 // just have to make sure that the matrix is freed
 NeedlemanWunsch::~NeedlemanWunsch(){
+   deleteMatrix();
+}
+
+void NeedlemanWunsch::deleteMatrix(){
    if(matrix){
       for(int i = 0; i < width; ++i){
          delete[] matrix[i];
@@ -308,10 +316,11 @@ NeedlemanWunsch::~NeedlemanWunsch(){
       }
       delete[] matrix;
    }
-
+   matrix = NULL;
 }
 
 void NeedlemanWunsch::setStrings(string a, string b){
+   deleteMatrix();
    A = a;
    B = b;
    width  = A.size();
@@ -323,6 +332,14 @@ void NeedlemanWunsch::setStrings(string a, string b){
       swap(A, B);
       swap(width, height);
    }
+}
+
+bool operator< (const Alignment & a, const Alignment & b){
+   return a.score < b.score;
+}
+
+bool operator> (const Alignment & a, const Alignment & b){
+   return a.score > b.score;
 }
 
 // print the whole thing

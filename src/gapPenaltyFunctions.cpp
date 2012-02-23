@@ -11,6 +11,7 @@ int constantGapPenalty(int gapLength){
 // Small gaps are expensive, but do not increase much in
 // price as their length increases. Penalties returned are:
 int affineGapPenalty(int gapLength){
+   if(gapLength == 0) return -4;
    return -(3/gapLength);
 }
 

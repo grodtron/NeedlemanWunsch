@@ -1,10 +1,20 @@
 #include <iostream>
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::cin;
 
 #include <string>
 using std::string;
+
+#include <fstream>
+using std::ifstream;
+
+#include <vector>
+using std::vector;
+
+#include <algorithm>
+using std::sort;
 
 #include "../include/NeedlemanWunsch.h"
 #include "../include/qwertyDistance.h"
@@ -13,28 +23,64 @@ using std::string;
 int main(int argc, const char *argv[])
 {
 
-   string A, B;
+   // variables to store stuff.... I'm tired
+   vector<Alignment> alignments;
    Alignment alignment;
 
-   // get strings to aline from command line args, otherwise ask for them:
-   if(argc == 3){
-      A = argv[1];
-      B = argv[2];
-   }else if(argc == 1){
-      cout << "Enter two strings to be aligned: " << endl << endl;
-      cin >> A >> B;
-   }else{
-      cout << "Received bad args (got " << argc-1 << ", should be 2 or 0)." << endl;
-      return 1;
-   }
-   
+   vector<string> sentences;
+   char sentence[1024];
+
+   // create the NeedlemanWunsch object
    NeedlemanWunsch nw;
-   nw.setStrings(A, B);
    nw.setSimilarityFunction(qwertyDistanceSimilarity);
    nw.setGapPenaltyFunction(affineGapPenalty);
-   nw.align(alignment);
 
-   alignment.print();
+   // setup the input stream
+   if(argc == 1){
+      cerr << "Not enough args - need one arg for input file name" << endl;
+      return 1;
+   }
+   ifstream input(argv[1]);
+
+   // read lines into vector
+   while(!input.eof()){
+      input.getline(sentence, 1024);
+      if(sentence[0] == '\0'){
+         continue;
+      }
+      sentences.push_back(string(sentence));
+   }
+
+   // contain it and end within this block
+   cout << "working... ";
+   {
+      // run through and align each string with each other string.
+      vector<string>::iterator it = sentences.begin();
+      vector<string>::iterator end = sentences.end();
+      for(;it != end; ++it){
+         vector<string>::iterator jt = sentences.begin();
+         for(;jt != it; ++jt){
+            nw.setStrings(*it, *jt);
+            nw.align(alignment);
+            alignments.push_back(alignment);
+         }
+      }
+   }
+   cout << "done!" << endl;
+
+   sort(alignments.begin(), alignments.end());
+
+   if(!alignments.size()){
+      cerr << "Empty input file" << endl;
+      return 0;
+   }
+
+   vector<Alignment>::reverse_iterator it = alignments.rbegin();
+   vector<Alignment>::reverse_iterator end = it + alignments.size()/2;
+
+   for(; it != end; ++it){
+      it->print();
+   }
    
    return 0;
 }
