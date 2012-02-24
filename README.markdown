@@ -1,3 +1,5 @@
+For more info on the purpose of this code, please check out [this blog post](http://blog.gordonbailey.net/post/2012/2/the-genetics-of-twitter-spam).
+
 So, how do you use this anyways?
 
 Test it out:
