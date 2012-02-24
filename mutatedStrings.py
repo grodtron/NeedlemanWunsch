@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# This script generates fake dna strings that are supposed to
+# have some common ground. IMHO using tweets is more interesting
+
 from random import choice, random
 from sys import argv
 
