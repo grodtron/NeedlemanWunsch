@@ -10,11 +10,16 @@ using std::string;
 #include "../include/NeedlemanWunsch.h"
 #include "../include/Alignment.h"
 
+// These constants are used to keep track of whether
+// each position in the alignment is a match, mismatch
+// or gap
 const char Alignment::MATCH = 'M';
 const char Alignment::MISMATCH = 'm';
 const char Alignment::GAP = 'g';
 
 
+// operators for sorting. One of them is not use, but I forget which
+// TODO - check and remove the unneeded one
 bool operator< (const Alignment & a, const Alignment & b){
    return a.score < b.score;
 }
@@ -27,9 +32,13 @@ int Alignment::getScore() const{
    return score;
 }
 
+
+// Below are the functions related to create output
+
 const int Alignment::CONSOLE = 0;
 const int Alignment::HTML    = 1;
 
+// the css that is necessary for the HTML version to render properly
 void Alignment::printHeader(ostream & stream, int format){
 
    // output the css for the html version
@@ -58,8 +67,6 @@ void Alignment::printHeader(ostream & stream, int format){
 
 // print the whole thing
 void Alignment::print(ostream & stream, int format) const {
-   // have to print the strings char by char using reverse iterators
-   // because the alignment process produces them backwards
    
    assert((format == CONSOLE || format == HTML) && "invalid format type");
    
@@ -97,6 +104,8 @@ void Alignment::print(ostream & stream, int format) const {
       }
       stream << endString << endl;
       // this is a funky loop that will execute once for A and once for B
+      //
+      // (s = B) == B is used instead of (s = B) because
       // apparently you can't cast a string directly to a bool... who knew
    }while(s == A && (s = B) == B);
 

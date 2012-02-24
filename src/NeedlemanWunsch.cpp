@@ -10,8 +10,8 @@ using std::copy;
 
 #include "../include/utils.cpp"
 // provides these two functions:
-// template max(x, y, z)
-// template swap(a, b)
+// template T max(T x, T y, T z)
+// template void swap(T a, T b)
 
 #include "../include/Alignment.h"
 
@@ -80,6 +80,9 @@ void NeedlemanWunsch::_init(){
 
             // get the gap lengths that led up to
             // this cell from both directions
+            // TODO - test this more, I'm suspicious it might
+            // not work exactly right
+            // (mainly because I haven't really tested it)
             int hGapLen = hCell.hGapLen + 1;
             int vGapLen = vCell.vGapLen + 1;
 
@@ -147,8 +150,9 @@ void NeedlemanWunsch::_traceBack(){
          matchType.push_back(A[i] == B[j] ? Alignment::MATCH : Alignment::MISMATCH);
          --i;
          --j;
-         // TODO - all this stuff is supposed to be outside the loop
-         // this if statement that is 
+         // TODO - the "j == 0 && i == 0" if statements should be outside the loop I think
+         // this is the cause of the bug where the first letter is dropped from one
+         // of the aligned strings
          if(j == 0 && i == 0){
             alignedA.push_back(A[i]);
             alignedB.push_back(B[j]);
@@ -181,6 +185,7 @@ void NeedlemanWunsch::_traceBack(){
    }
 
    // allocate size in the alignment object
+   // and then copy the aligned strings into them
 
    alignment.A.resize(alignedA.size(), ' ');
    alignment.B.resize(alignedA.size(), ' ');
@@ -193,7 +198,6 @@ void NeedlemanWunsch::_traceBack(){
    // the score is the bottom right of the matrix
    alignment.score = matrix[width-1][height-1].score;
 }
-
 
 int NeedlemanWunsch::similarity(char a, char b){
    if(similarityFunction){
@@ -216,7 +220,7 @@ int NeedlemanWunsch::gapPenalty(int length){
 /////////////////////////////////////////////
 
 // constructor!
-//
+// (in case it wasn't obvious)
 NeedlemanWunsch::NeedlemanWunsch(string a, string b)
 : A(a), B(b), matrix(NULL), similarityFunction(NULL), gapPenaltyFunction(NULL)
 {

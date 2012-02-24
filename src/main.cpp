@@ -23,7 +23,6 @@ using std::sort;
 int main(int argc, const char *argv[])
 {
 
-   // variables to store stuff.... I'm tired
    vector<Alignment> alignments;
    Alignment alignment;
 
@@ -51,8 +50,6 @@ int main(int argc, const char *argv[])
       sentences.push_back(string(sentence));
    }
 
-   int averageScore = 0;
-
    // contain it and end within this block
    cerr << "working... ";
    {
@@ -65,7 +62,6 @@ int main(int argc, const char *argv[])
             nw.setStrings(*it, *jt);
             nw.align(alignment);
             alignments.push_back(alignment);
-            averageScore += alignment.getScore();
          }
       }
    }
@@ -77,12 +73,6 @@ int main(int argc, const char *argv[])
       cerr << "Empty input file" << endl;
       return 0;
    }
-
-   cerr << "Total score: " << averageScore << endl;
-   averageScore /= alignments.size();
-   cerr << "average score" << averageScore << endl;
-   averageScore *= 3;
-   cerr << "3 * average score" << averageScore << endl;
 
    vector<Alignment>::reverse_iterator it = alignments.rbegin();
    vector<Alignment>::reverse_iterator end = alignments.rend();
