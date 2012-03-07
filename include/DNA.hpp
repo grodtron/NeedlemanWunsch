@@ -14,6 +14,7 @@ class DNA{
       size_t length;
 
       void setSequence(char * sequence);
+      void setSequence(const DNA & sequence);
    
    public:
 
@@ -40,9 +41,11 @@ class DNA{
       friend istream & operator>> (istream & s,       DNA & d);
 
       DNA(char * sequence);
+      DNA(const DNA & other);
       DNA();
      ~DNA();
-      char operator[](size_t i);
+      char operator[](size_t i) const;
+      size_t size() const;
 };
 
 #endif

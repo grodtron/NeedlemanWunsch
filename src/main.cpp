@@ -10,6 +10,7 @@ using std::setw;
 #include <climits>
 
 #include "../include/DNA.hpp"
+#include "DPM.cpp"
 
 int main(int argc, const char *argv[])
 {
@@ -29,6 +30,10 @@ int main(int argc, const char *argv[])
          cin.ignore(INT_MAX,'\n');
       }
    }
+
+   DPM<int> matrix(a, b);
+
+   matrix.align();
 
    cout << "the sequences were: " << endl; 
    cout << a << endl << b << endl;
