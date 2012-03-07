@@ -8,13 +8,6 @@ using std::string;
 #include <algorithm>
 using std::copy;
 
-#include "../include/utils.cpp"
-// provides these two functions:
-// template T max(T x, T y, T z)
-// template void swap(T a, T b)
-
-#include "../include/Alignment.h"
-
 #include "../include/NeedlemanWunsch.h"
 
 // directional flags for matrixCell;
@@ -22,19 +15,19 @@ const unsigned char NeedlemanWunsch::VERTICAL   = 1 << 0;
 const unsigned char NeedlemanWunsch::DIAGONAL   = 1 << 1;
 const unsigned char NeedlemanWunsch::HORIZONTAL = 1 << 2;
 
-
 /////////////////////////////////////////////
 //                                         //
 //                Private                  //
 //                                         //
 /////////////////////////////////////////////
 
-void NeedlemanWunsch::_init(){
+template <typename T>
+void NeedlemanWunsch<T>::_fill(){
 
    bool notYetAllocated = false;
    // allocate matrix if it hasn't been already
    if(!matrix){
-      matrix = new matrixCell*[width];
+      matrix = new matrixCell<T>*[width];
       notYetAllocated = true;
    }
 
@@ -43,7 +36,7 @@ void NeedlemanWunsch::_init(){
       // if the matrix hasn't already been allocated, then we need
       // to allocate space for each column
       if (notYetAllocated){
-         matrix[i] = new matrixCell[height];
+         matrix[i] = new matrixCell<T>[height];
       }
 
       for(int j = 0; j < height; ++j){
@@ -51,46 +44,34 @@ void NeedlemanWunsch::_init(){
             // gap lengths, score and directions all zero
             // this is the cell that is the endpoint of the
             // matrix (top left corner)
-            matrix[i][j] = {0,0,0,0};
+            matrix[i][j] = {0,0};
          }else if(i == 0){
             // these are the cells along the left-hand vertical edge
             // there gap length is their position, and their score is
             // the previous score + the gapPenalty for their position
             // they have only one possible direction, which is vertical (up)
-            matrix[0][j].score = matrix[0][j-1].score + gapPenalty(j);
-            matrix[0][j].hGapLen = 0;
-            matrix[0][j].vGapLen = j;
+            matrix[0][j].score = matrix[0][j-1].score + gapPenalty;
             matrix[0][j].direction = VERTICAL;
          }else if(j == 0){
             // this is the same initialization as above, except for the cells along
             // the top horizontal edge
-            matrix[i][0].score = matrix[i-1][0].score + gapPenalty(i);
-            matrix[i][0].hGapLen = i;
-            matrix[i][0].vGapLen = 0;
+            matrix[i][0].score = matrix[i-1][0].score + gapPenalty;
             matrix[i][0].direction = HORIZONTAL;
          }else{
 
             // get the cells that we are working with
-            matrixCell dCell = matrix[i-1][j-1];
-            matrixCell hCell = matrix[i-1][j  ];
-            matrixCell vCell = matrix[i  ][j-1];
+            matrixCell<T> dCell = matrix[i-1][j-1];
+            matrixCell<T> hCell = matrix[i-1][j  ];
+            matrixCell<T> vCell = matrix[i  ][j-1];
 
             // "this cell". I'm OCD about name lengths being the same
-            matrixCell tCell;
-
-            // get the gap lengths that led up to
-            // this cell from both directions
-            // TODO - test this more, I'm suspicious it might
-            // not work exactly right
-            // (mainly because I haven't really tested it)
-            int hGapLen = hCell.hGapLen + 1;
-            int vGapLen = vCell.vGapLen + 1;
+            matrixCell<T> tCell;
 
             // get the possible scores for this cell, keep
             // the max of the three possibilities
-            int dScore = dCell.score + similarity(A[i], B[j]);
-            int hScore = hCell.score + gapPenalty(hGapLen);
-            int vScore = vCell.score + gapPenalty(vGapLen);
+            T dScore = dCell.score + similarity(i, j);
+            T hScore = hCell.score + gapPenalty;
+            T vScore = vCell.score + gapPenalty;
 
             tCell.score = max(dScore, vScore, hScore);
 
@@ -99,33 +80,37 @@ void NeedlemanWunsch::_init(){
             // and update the direction flags of this cell, which are
             // used in the traceback phase.
             tCell.direction = 0;
+
             if(tCell.score == dScore){
                tCell.direction |= DIAGONAL;
             }
-
-            // for the vertical and horizontal paths, we also update
-            // the gap length at this cell for use by descendant cells
-            // zero indicates that there was no gap leading to this cell
             if(tCell.score == vScore){
                tCell.direction |= VERTICAL;
-               tCell.vGapLen = vGapLen;
-            }else{
-               tCell.vGapLen = 0;
             }
-
             if(tCell.score == hScore){
                tCell.direction |= HORIZONTAL;
-               tCell.hGapLen = hGapLen;
-            }else{
-               tCell.hGapLen = 0;
             }
-
             matrix[i][j] = tCell;
          }
       }
    }
 }
-
+// This is where most of the work is needed. Need to go back to getting ALL alignments inside a 
+// vector of some type, but with the ability to only get a ceratin number of them. Will go back
+// to using a recursive thing with a growing/shrinking deque, or really just char array.
+// pass some int along by reference to keep track of how many alignments we still want to capture.
+// also need to keep track of where we are within the thing, so each traceback cell also needs a "visited"
+// flag.
+//
+// but fuck, actually it's more complicated than that, because a node can be visited multiple times.....
+// since the algo is deterministic, we just need some way to bookmark our position within it so we can restart
+// from that point.....
+//
+// need to parameterize it somehow......
+//
+// or maybe there's a builting way.....
+//
+// TODO
 void NeedlemanWunsch::_traceBack(){
    // This function follows the directions at each matrix cell
    // since all possible alignments are equally scoring, we will

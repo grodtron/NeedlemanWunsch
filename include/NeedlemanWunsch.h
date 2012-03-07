@@ -1,39 +1,32 @@
 #ifndef NeedlemanWunsch_H_
 #define NeedlemanWunsch_H_
 
-#include <string>
-using std::string;
-
-#include "Alignment.h"
+#include "DNA.h"
 
 // This struct represents each cell in the score matrix
 // and holds traceback information as well
+template <typename T>
 struct matrixCell{
    // the score at this point inside the matrix
-   int score;
+   T score;
    // a set of flags indicating the possible directions
    // for this position in the matrix
    unsigned char direction;
-   // the length of the horizontal gap that leads to this
-   // cell. This is used for calculating constant and affine
-   // gap penalties
-   int hGapLen;
-   // same as hGapLen, except for vertical gaps
-   int vGapLen;
 };
 
+template <typename T>
 class NeedlemanWunsch{
 
       // the input strings
-      string A;
-      string B;
+      DNA A;
+      DNA B;
 
       Alignment alignment;
 
       // the score matrix
-      int width;
-      int height;
-      matrixCell ** matrix;
+      size_t width;
+      size_t height;
+      matrixCell<T> ** matrix;
 
       // initialize the matrix
       void _init();
@@ -41,22 +34,22 @@ class NeedlemanWunsch{
       // get alignment from initialized matrix
       void _traceBack();
 
-      // get similarity between two chars
-      int similarity(char a, char b);
-      int (*similarityFunction)(char a, char b);
-      
-      int gapPenalty(int gapLength);
-      int (*gapPenaltyFunction)(int gapLength);
+      T matchScore;
+      T gapScore;
+      T misMatchScore;
+
+      // get similarity between sequences at given index
+      T similarity(size_t i, size_t j);
 
       void deleteMatrix();
 
    public:
-      NeedlemanWunsch(string a, string b);
+      NeedlemanWunsch(DNA a, DNA b);
       NeedlemanWunsch();
      ~NeedlemanWunsch();
-      void setSimilarityFunction(int (*f)(char, char));
-      void setGapPenaltyFunction(int (*f)(int));
-      void setStrings(string a, string b);
+      void setMatchScore(T val);
+      void setMisMatchScore(T val);
+      void setGapPenalty(T val);
       void align(Alignment &);
 
       // directional flags for matrixCell;
