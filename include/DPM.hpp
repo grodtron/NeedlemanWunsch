@@ -66,6 +66,7 @@ class DPM{
       void setGapPenalty(T val);
 
       void align();
+      void next();
 
       // directional flags for matrixCell;
       static const unsigned char VERTICAL   = 1 << 0;

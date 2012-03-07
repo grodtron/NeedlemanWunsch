@@ -238,6 +238,10 @@ void DPM<T>::deleteMatrix(){
 template <typename T>
 void DPM<T>::align(){
    _fill();
+}
+
+template <typename T>
+void DPM<T>::next(){
    _traceBack();
    cout << (currentA+2) << endl
         << (currentB+2) << endl;
