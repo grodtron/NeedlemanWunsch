@@ -28,7 +28,7 @@ endif
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, main.o Alignment.o NeedlemanWunsch.o qwertyDistance.o gapPenaltyFunctions.o)
+OBJS=$(addprefix $(OBJ_DIR)/, main.o DNA.o)
 
 executable=nw
 
@@ -46,9 +46,6 @@ $(executable): $(OBJS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_DIR)
 	$(CPP) $(CPP_FLAGS) -c $< -o $@
-
-$(SRC_DIR)/qwertyDistance.cpp: $(SRC_DIR)/makeQwertyDistance.py
-	python $< $@
 
 clean:
 	rm -rf $(OBJ_DIR)
