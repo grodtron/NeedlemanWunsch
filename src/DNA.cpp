@@ -20,8 +20,7 @@ DNA::~DNA(){
 
 char DNA::operator[] (size_t i){
    if(i >= length){
-      // TODO - throw
-      return '\0';
+      throw DNA::InvalidIndexException(i);
    }
    return sequence[i];
 }

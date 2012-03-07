@@ -17,7 +17,12 @@ class DNA{
    
    public:
 
-      // TODO - Define exception class and throw when appropriate
+      class InvalidIndexException:    public exception{
+            size_t index;
+         public:
+            InvalidIndexException(size_t i) : index(i) {};
+            size_t getIndex() const { return index; };
+      };
 
       class InvalidSequenceException: public exception{
             char * sequence;
