@@ -24,25 +24,6 @@ template <typename T> T max(T a, T b, T c){
 template <typename T>
 void DPM<T>::_fill(){
 
-   currentIndex = 0;
-
-   if(currentA){ delete[] currentA; }
-   if(currentB){ delete[] currentB; }
-
-   // this is as long as it can possibly be
-   currentA = new char[width + height];
-   currentB = new char[width + height];
-
-   deleteStack();
-   currentStack.push(new DPM<T>::StackCell);
-   currentStack.top()->i = width  - 1;
-   currentStack.top()->j = height - 1;
-   currentStack.top()->flags = 0;
-
-
-   // TODO - figure if this is the right place for this and also
-   // alloc space for currentA and currentB
-
    bool notYetAllocated = false;
    // allocate matrix if it hasn't been already
    if(!matrix){
@@ -115,52 +96,52 @@ void DPM<T>::_fill(){
 }
 
 template <typename T>
-void DPM<T>::_traceBack(){
+void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char * b, size_t & index ) const{
    while(currentStack.size()){
 
-      DPM<T>::StackCell * currentC = currentStack.top();
-      DPM<T>::MatrixCell  currentM = matrix[currentC->i][currentC->j];
-      DPM<T>::StackCell * child;
+      DPM<T>::StackCell & currentC = currentStack.top();
+      DPM<T>::MatrixCell  currentM = matrix[currentC.i][currentC.j];
+      DPM<T>::StackCell   child;
 
-      if(currentC->flags & DPM::VISITED){
+      if(currentC.flags & DPM::VISITED){
          currentStack.pop();
-         --currentIndex;
+         --index;
       }else{
          // TODO - copy strings into some kind of Alignment struct/class BACKWARDS
          // starting from the NULL terminator, up to BUT NOT INCLUDING
          // the terminating NULL
-         currentA[currentIndex] = ((currentC->flags & DPM<T>::H_GAP) ? '-' : A[currentC->i]);
-         currentB[currentIndex] = ((currentC->flags & DPM<T>::V_GAP) ? '-' : B[currentC->j]);
-         ++currentIndex;
-         currentC->flags |= DPM::VISITED;
+         a[index] = ((currentC.flags & DPM<T>::H_GAP) ? '-' : A[currentC.i]);
+         a[index] = ((currentC.flags & DPM<T>::V_GAP) ? '-' : B[currentC.j]);
+         ++index;
+         currentC.flags |= DPM::VISITED;
 
          if(currentM.direction & (DPM<T>::VERTICAL|DPM<T>::HORIZONTAL|DPM<T>::DIAGONAL)){
             if(currentM.direction & DPM<T>::VERTICAL){
-               child = new DPM<T>::StackCell;
-               child->i = currentC->i;
-               child->j = currentC->j - 1;
-               child->flags = DPM<T>::H_GAP;
+               child = DPM<T>::StackCell();
+               child.i = currentC.i;
+               child.j = currentC.j - 1;
+               child.flags = DPM<T>::H_GAP;
                currentStack.push(child);
             }
             if(currentM.direction & DPM<T>::HORIZONTAL){
-               child = new DPM<T>::StackCell;
-               child->i = currentC->i - 1;
-               child->j = currentC->j;
-               child->flags = DPM<T>::V_GAP;
+               child = DPM<T>::StackCell();
+               child.i = currentC.i - 1;
+               child.j = currentC.j;
+               child.flags = DPM<T>::V_GAP;
                currentStack.push(child);
             }
             if(currentM.direction & DPM<T>::DIAGONAL){
-               child = new DPM<T>::StackCell;
-               child->i = currentC->i - 1;
-               child->j = currentC->j - 1;
-               child->flags = 0;
+               child = DPM<T>::StackCell();
+               child.i = currentC.i - 1;
+               child.j = currentC.j - 1;
+               child.flags = 0;
                currentStack.push(child);
             }
          }else{
             // todo - copy backwards from here into struct and
             // add to struct or some kind of something
-            currentA[currentIndex + 1] = '\0';
-            currentB[currentIndex + 1] = '\0';
+            // a[index + 1] = '\0';
+            // a[index + 1] = '\0';
             return;
          }
       }
@@ -168,8 +149,9 @@ void DPM<T>::_traceBack(){
    // if we got to here, then there are no more paths.
    // set everything to null.
    // TODO - end iteration
-   *currentA = '\0';
-   *currentB = '\0';
+   *a = '\0';
+   *b = '\0';
+   index = 0;
    return;
 }
 
@@ -188,7 +170,7 @@ T DPM<T>::similarity(size_t i, size_t j){
 // (in case it wasn't obvious)
 template <typename T>
 DPM<T>::DPM(DNA a, DNA b)
-: A(a), B(b), matrix(NULL), currentA(NULL), currentB(NULL), matchScore(3), gapScore(-1), misMatchScore(-1)
+: A(a), B(b), matrix(NULL), matchScore(3), gapScore(-1), misMatchScore(-1)
 {
    width  = A.size();
    height = B.size();
@@ -196,7 +178,7 @@ DPM<T>::DPM(DNA a, DNA b)
 
 template <typename T>
 DPM<T>::DPM()
-: width(0), height(0), currentA(NULL), currentB(NULL), matrix(NULL)
+: width(0), height(0), matrix(NULL)
 {
 }
 
@@ -204,15 +186,6 @@ DPM<T>::DPM()
 template <typename T>
 DPM<T>::~DPM(){
    deleteMatrix();
-   deleteStack();
-}
-
-template <typename T>
-void DPM<T>::deleteStack(){
-   while(currentStack.size()){
-      delete currentStack.top();
-      currentStack.pop();
-   }
 }
 
 template <typename T>
@@ -232,15 +205,16 @@ void DPM<T>::align(){
    _fill();
 }
 
+/*
 template <typename T>
 void DPM<T>::next(){
    // TODO - define an iterator, and possibly a some kind of Match struct
    // and use them for this functionality
-   _traceBack();
-   cout << (currentA+2) << endl
-        << (currentB+2) << endl;
+   //_traceBack();
+   //cout << (currentA+2) << endl
+   //     << (currentB+2) << endl;
 }
-
+*/
 ///////////////////////////////////////////////////////////////
 //                                                           //
 //                        Iterator                           //
@@ -248,11 +222,12 @@ void DPM<T>::next(){
 ///////////////////////////////////////////////////////////////
 
 
+
 template <typename T>
 DPM<T>::Iterator::Iterator() : parent(NULL) {}
 
 template <typename T>
-DPM<T>::Iterator::Iterator(DPM<T> * parent) : parent(parent) {}
+DPM<T>::Iterator::Iterator(const DPM<T> & parent) : parent(parent) {}
 
 template <typename T>
 bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){ return other.parent == parent; }
@@ -260,31 +235,36 @@ bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){ return other.
 template <typename T>
 bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){ return other.parent != parent; }
 
+///*
+// de-reference
 template <typename T>
-DPM<T>::Alignment & DPM<T>::Iterator::operator*(const DPM<T>::Iterator & other){
-   if(!parent->currentAlignment || incrementBeforeAccess ){
-      parent->next();
+typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
+   if(!parent.currentAlignment || incrementBeforeAccess ){
+      parent._traceBack(currentStack, a, b, index);
       incrementBeforeAccess = false;
    }
    return parent->currentAlignment;
 }
 
+// pre-increment
 template <typename T>
-DPM<T>::Alignment & DPM<T>::Alignment::operator++ (){
+typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
    if(incrementBeforeAccess){
-      parent->next();
+      parent._traceBack(currentStack, a, b, index);
+      incrementBeforeAccess = false;
    }
-   incrementBeforeAccess = false;
-   parent->next();
+   parent._traceBack(currentStack, a, b, index);
    return *this;
 }
-
+//*/
+// post-increment
 template <typename T>
-DPM<T>::Alignment & DPM<T>::Alignment::operator++ (int){
+typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (int){
    if(incrementBeforeAccess){
-      parent->next();
+      parent._traceBack(currentStack, a, b, index);
    }
    incrementBeforeAccess = true;
    return *this;
 }
+//*/
 

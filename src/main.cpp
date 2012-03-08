@@ -32,6 +32,7 @@ int main(int argc, const char *argv[])
    }
 
    DPM<int> matrix(a, b);
+   /*
    matrix.align();
    cout << endl << endl;
    matrix.next();
@@ -40,7 +41,7 @@ int main(int argc, const char *argv[])
    cout << endl << endl;
    matrix.next();
    cout << endl << endl;
-
+*/
    cout << "the sequences were: " << endl; 
    cout << a << endl << b << endl;
 
