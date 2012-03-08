@@ -241,3 +241,50 @@ void DPM<T>::next(){
         << (currentB+2) << endl;
 }
 
+///////////////////////////////////////////////////////////////
+//                                                           //
+//                        Iterator                           //
+//                                                           //
+///////////////////////////////////////////////////////////////
+
+
+template <typename T>
+DPM<T>::Iterator::Iterator() : parent(NULL) {}
+
+template <typename T>
+DPM<T>::Iterator::Iterator(DPM<T> * parent) : parent(parent) {}
+
+template <typename T>
+bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){ return other.parent == parent; }
+
+template <typename T>
+bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){ return other.parent != parent; }
+
+template <typename T>
+DPM<T>::Alignment & DPM<T>::Iterator::operator*(const DPM<T>::Iterator & other){
+   if(!parent->currentAlignment || incrementBeforeAccess ){
+      parent->next();
+      incrementBeforeAccess = false;
+   }
+   return parent->currentAlignment;
+}
+
+template <typename T>
+DPM<T>::Alignment & DPM<T>::Alignment::operator++ (){
+   if(incrementBeforeAccess){
+      parent->next();
+   }
+   incrementBeforeAccess = false;
+   parent->next();
+   return *this;
+}
+
+template <typename T>
+DPM<T>::Alignment & DPM<T>::Alignment::operator++ (int){
+   if(incrementBeforeAccess){
+      parent->next();
+   }
+   incrementBeforeAccess = true;
+   return *this;
+}
+
