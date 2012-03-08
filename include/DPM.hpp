@@ -6,17 +6,50 @@
 #include <stack>
 using std::stack;
 
+#include <iterator>
+using std::iterator;
+using std::input_iterator_tag;
+
 
 template <typename T>
 class DPM{
 
-      // This struct represents each cell in the score matrix
-      // and holds traceback information as well
+      // a small class that wraps alignments. These are returned by DPM::Iterator
+      // and handle the printing functionality. 
+      // TODO - info about match types could be added here to extend to fancier
+      // printing modes, such as ANSI or HTML
+      class Alignment{
+            char * a;
+            char * b;
+            Alignment(char * a, char * b);
+         public:
+            Alignment();
+            void print();
+      };
+
+      // an iterator that can be used to get successive alignment objects
+      // as the results of the algorithm
+      class Iterator : public iterator<input_iterator_tag, Alignment>{
+            // a reference to the DPM object that this iterator
+            // refers to
+            DPM & parent;
+            // a flag that is set when post-increment is used.
+            // it indicates that the next time the alignment this
+            // object points to is requested,
+            // the iterator should increment
+            bool updateBeforeAccess;
+            Iterator(DPM<T> & parent);
+         public:
+            Iterator();
+            bool operator==(const DPM<T>::Iterator & other);
+            bool operator!=(const DPM<T>::Iterator & other);
+            Alignment & operator*();
+            DPM<T>::Iterator& operator++();// {++p;return *this;}
+            DPM<T>::Iterator  operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
+      };
+
       struct MatrixCell{
-         // the score at this point inside the matrix
          T score;
-         // a set of flags indicating the possible directions
-         // for this position in the matrix
          unsigned char direction;
       };
 
@@ -40,6 +73,8 @@ class DPM{
       char * currentA;
       char * currentB;
       size_t currentIndex;
+      Alignment currentAlignment;
+      Iterator  iter;
 
       // initialize the matrix
       void _fill();
@@ -50,13 +85,10 @@ class DPM{
       T matchScore;
       T gapScore;
       T misMatchScore;
-
-      // get similarity between sequences at given index
       T similarity(size_t i, size_t j);
 
       void deleteMatrix();
       void deleteStack();
-
    public:
       DPM(DNA a, DNA b);
       DPM();

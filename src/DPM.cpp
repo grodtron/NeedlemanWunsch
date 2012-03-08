@@ -116,20 +116,6 @@ void DPM<T>::_fill(){
 
 template <typename T>
 void DPM<T>::_traceBack(){
-   // This function follows the directions at each matrix cell
-   // since all possible alignments are equally scoring, we will
-   // favor the ones that are most diagonal first, and the ones
-   // that tend towards adding gaps to the shorter of the two
-   // strings second
-   //
-   // stackStack - use a stl::stack - it's easier
-   //
-   // struct stackCell{
-   //    size_t i;
-   //    size_t j;
-   //    unsigned char flags;
-   // }
-
    while(currentStack.size()){
 
       DPM<T>::StackCell * currentC = currentStack.top();
@@ -140,9 +126,12 @@ void DPM<T>::_traceBack(){
          currentStack.pop();
          --currentIndex;
       }else{
-         ++currentIndex;
+         // TODO - copy strings into some kind of Alignment struct/class BACKWARDS
+         // starting from the NULL terminator, up to BUT NOT INCLUDING
+         // the terminating NULL
          currentA[currentIndex] = ((currentC->flags & DPM<T>::H_GAP) ? '-' : A[currentC->i]);
          currentB[currentIndex] = ((currentC->flags & DPM<T>::V_GAP) ? '-' : B[currentC->j]);
+         ++currentIndex;
          currentC->flags |= DPM::VISITED;
 
          if(currentM.direction & (DPM<T>::VERTICAL|DPM<T>::HORIZONTAL|DPM<T>::DIAGONAL)){
@@ -168,6 +157,8 @@ void DPM<T>::_traceBack(){
                currentStack.push(child);
             }
          }else{
+            // todo - copy backwards from here into struct and
+            // add to struct or some kind of something
             currentA[currentIndex + 1] = '\0';
             currentB[currentIndex + 1] = '\0';
             return;
@@ -176,6 +167,7 @@ void DPM<T>::_traceBack(){
    }
    // if we got to here, then there are no more paths.
    // set everything to null.
+   // TODO - end iteration
    *currentA = '\0';
    *currentB = '\0';
    return;
@@ -242,6 +234,8 @@ void DPM<T>::align(){
 
 template <typename T>
 void DPM<T>::next(){
+   // TODO - define an iterator, and possibly a some kind of Match struct
+   // and use them for this functionality
    _traceBack();
    cout << (currentA+2) << endl
         << (currentB+2) << endl;
