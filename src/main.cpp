@@ -32,8 +32,18 @@ int main(int argc, const char *argv[])
    }
 
    DPM<int> matrix(a, b);
-   /*
    matrix.align();
+
+   DPM<int>::Iterator it = matrix.begin();
+   DPM<int>::Iterator end= matrix.end();
+
+   while (it != end){
+      ++it;
+      (*it).print();
+   }
+
+
+   /*
    cout << endl << endl;
    matrix.next();
    cout << endl << endl;

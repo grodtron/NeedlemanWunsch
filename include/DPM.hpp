@@ -69,6 +69,7 @@ class DPM{
       // an iterator that can be used to get successive alignment objects
       // as the results of the algorithm
       class Iterator : public iterator<input_iterator_tag, Alignment>{
+            friend class DPM<T>;
             // a reference to the DPM object that this iterator
             // refers to
             const DPM<T> & parent;
@@ -101,6 +102,9 @@ class DPM{
       void setGapPenalty(T val);
 
       void align();
+
+      Iterator begin();
+      Iterator end();
 
       // directional flags for matrixCell;
       static const unsigned char VERTICAL   = 1 << 0;
