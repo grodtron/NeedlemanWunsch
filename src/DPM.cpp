@@ -26,6 +26,8 @@ template <typename T>
 void DPM<T>::_init(){
 
    // allocate matrix if it hasn't been already
+   // // TODO - remove not - yet allocated thing
+   // there should not be a case where the matrix needs to be re-allocated
    bool notYetAllocated = false;
    if(!matrix){
       matrix = new DPM<T>::MatrixCell*[width];
@@ -70,7 +72,8 @@ void DPM<T>::_init(){
 
             // get the possible scores for this cell, keep
             // the max of the three possibilities
-            T dScore = dCell.score + similarity(i, j);
+            // the offset is for the blank rows along the edges
+            T dScore = dCell.score + similarity(i - 1, j - 1);
             T hScore = hCell.score + gapScore;
             T vScore = vCell.score + gapScore;
 
@@ -112,13 +115,13 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          // fix this, probably by moving it into the inside of the loops and keeping i and j indexes seperate from index
          if(currentC.flags == DPM<T>::VERTICAL){
             a[index] = '-';
-            b[index] = B[currentC.j + 1];
+            b[index] = B[currentC.j];
          }else if(currentC.flags == DPM<T>::HORIZONTAL){
-            a[index] = A[currentC.i + 1];
+            a[index] = A[currentC.i];
             b[index] = '-';
          }else if(currentC.flags == DPM<T>::DIAGONAL){
-            a[index] = A[currentC.i + 1];
-            b[index] = B[currentC.j + 1];
+            a[index] = A[currentC.i];
+            b[index] = B[currentC.j];
          }else{
             // this is an error
          }
@@ -148,10 +151,6 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
                currentStack.push_back(child);
             }
          }else{
-            // todo - copy backwards from here into struct and
-            // add to struct or some kind of something
-            // a[index + 1] = '\0';
-            // a[index + 1] = '\0';
             return;
          }
       }
@@ -181,8 +180,9 @@ template <typename T>
 DPM<T>::DPM(DNA a, DNA b)
 : A(a), B(b), matrix(NULL), matchScore(3), gapScore(-1), misMatchScore(-1)
 {
-   width  = A.size();
-   height = B.size();
+   // an extra row must be allocated otherwise the first character of the sequences will be truncated
+   width  = A.size() + 1;
+   height = B.size() + 1;
    _init();
 }
 
