@@ -63,6 +63,7 @@ class DPM{
             Alignment(char * a, char * b, size_t len);
          public:
             Alignment();
+            Alignment(const DPM<T>::Alignment & other);
            ~Alignment();
             void print();
       };
@@ -73,13 +74,13 @@ class DPM{
             friend class DPM<T>;
             // a reference to the DPM object that this iterator
             // refers to
-            const DPM<T> & parent;
+            DPM<T> & parent;
             // a flag that is set when post-increment is used.
             // it indicates that the next time the alignment this
             // object points to is requested,
             // the iterator should increment
-            bool incrementBeforeAccess;
-            Iterator(const DPM<T> & parent);
+            unsigned char flags;
+            Iterator(DPM<T> & parent);
             // these hold the current progress of the algorithm for this iterator
             list<DPM<T>::StackCell> currentStack;
             char * a;
@@ -87,12 +88,16 @@ class DPM{
             size_t index;
          public:
            ~Iterator();
+            Iterator(const DPM<T>::Iterator & other);
             bool operator==(const DPM<T>::Iterator & other);
             bool operator!=(const DPM<T>::Iterator & other);
             //DPM<T>::Alignment   operator*();
+            DPM<T>::Iterator & operator=(const DPM<T>::Iterator & other);
             Alignment   operator*();
             DPM<T>::Iterator  & operator++();// {++p;return *this;}
-            DPM<T>::Iterator  & operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
+            DPM<T>::Iterator    operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
+            static const unsigned char  INCREMENT_BEFORE_ACCESS = 1 << 0;
+            static const unsigned char  ITERATION_COMPLETE      = 1 << 0;
       };
 
       DPM(DNA a, DNA b);

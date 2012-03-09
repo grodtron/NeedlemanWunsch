@@ -192,11 +192,12 @@ template <typename T>
 typename DPM<T>::Iterator DPM<T>::begin(){
    DPM<T>::Iterator it(*this);
    it.index = 0;
-   it.incrementBeforeAccess = true;
+   it.flags = 0;
    it.currentStack.push_back(DPM<T>::StackCell());
    it.currentStack.back().i = width - 1;
    it.currentStack.back().j = height - 1;
    it.currentStack.back().flags = 0;
+   ++it;
    // by value
    return it;
 }
@@ -207,6 +208,7 @@ typename DPM<T>::Iterator DPM<T>::end(){
    it.index = 0;
    //it.incrementBeforeAccess = true;
    it.currentStack.resize(0);
+   it.flags = DPM<T>::Iterator::ITERATION_COMPLETE;
    //it.currentStack.back().i = 0;
    //it.currentStack.back().j = 0;
    //it.currentStack.back().flags = 0;
@@ -221,17 +223,51 @@ typename DPM<T>::Iterator DPM<T>::end(){
 ///////////////////////////////////////////////////////////////
 
 template <typename T>
-DPM<T>::Iterator::Iterator(const DPM<T> & parent) : parent(parent), index(0) {
-     a = new char[parent.width + parent.height]; 
-     b = new char[parent.width + parent.height]; 
-     a[0] = '\0';
-     b[0] = '\0';
+DPM<T>::Iterator::Iterator(DPM<T> & parent) : parent(parent), flags(0), index(0) {
+   a = new char[parent.width + parent.height]; 
+   b = new char[parent.width + parent.height]; 
+   a[0] = '\0';
+   b[0] = '\0';
+}
+
+template <typename T>
+typename DPM<T>::Iterator & DPM<T>::Iterator::operator=(const DPM<T>::Iterator & other){
+   parent = other.parent;
+   flags = other.flags;
+   index = other.index;
+   a = new char[parent.width + parent.height]; 
+   b = new char[parent.width + parent.height]; 
+   size_t i;
+   for(i = 0; other.a[i] != '\0'; ++i){
+      a[i] = other.a[i];
+      b[i] = other.b[i];
+   }
+   a[i] = '\0';
+   b[i] = '\0';
+   return *this;
+}
+
+// copy cosntructor
+template <typename T>
+DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other) : parent(other.parent), flags(other.flags), index(other.index) {
+   a = new char[parent.width + parent.height]; 
+   b = new char[parent.width + parent.height]; 
+   size_t i;
+   for(i = 0; other.a[i] != '\0'; ++i){
+      a[i] = other.a[i];
+      b[i] = other.b[i];
+   }
+   a[i] = '\0';
+   b[i] = '\0';
 }
 
 template <typename T>
 DPM<T>::Iterator::~Iterator(){
-   delete [] a;
-   delete [] b;
+   //cout << "Destructor!" << endl;
+   if (a) delete [] a;
+   if (b) delete [] b;
+   a = NULL;
+   b = NULL;
 }
 
 // TODO - more thorough equality checking. Use short circuits to check in this order:
@@ -252,7 +288,7 @@ DPM<T>::Iterator::~Iterator(){
 template <typename T>
 bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
    return        //other.parent == parent
-       /*&&*/ currentStack.size() == other.currentStack.size();
+      /*&&*/ (flags == other.flags && currentStack.size() == other.currentStack.size());
 }
 
 // TODO - define == in terms of !=, since it's probably used more.... maybe this is micro-opt
@@ -264,36 +300,51 @@ bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){ return !opera
 // de-reference
 template <typename T>
 typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
-   if( incrementBeforeAccess ){
-      parent._traceBack(currentStack, a, b, index);
-      incrementBeforeAccess = false;
-   }
    return DPM<T>::Alignment(a, b, index);
 }
 
+
+            //DPM<T>::Iterator  & operator++();// {++p;return *this;}
+            //DPM<T>::Iterator    operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
 // pre-increment
 template <typename T>
 typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
-   if(incrementBeforeAccess){
-      parent._traceBack(currentStack, a, b, index);
-      incrementBeforeAccess = false;
-   }
    parent._traceBack(currentStack, a, b, index);
+   if(a[0] == '\0'){ flags |= ITERATION_COMPLETE; }
    return *this;
 }
 
 // post-increment
 template <typename T>
-typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (int){
-   if(incrementBeforeAccess){
-      parent._traceBack(currentStack, a, b, index);
-   }
-   incrementBeforeAccess = true;
-   return *this;
+typename DPM<T>::Iterator  DPM<T>::Iterator::operator++ (int){
+   Iterator tmp(*this);
+   operator++();
+   return tmp;
 }
 
 template <typename T>
 DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { }
+
+template <typename T>
+DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
+   if(other.a){
+      size_t len;
+      for(len = 0; other.a[len] != '\0'; ++len);
+      // len is 1 + the index of the NULL terminator
+      ++len;
+
+      a = new char[len];
+      b = new char[len];
+
+      for(size_t i = 0; i < len; ++i){
+         a[i] = other.a[i];
+         b[i] = other.b[i];
+      }
+   }else{
+      a = NULL;
+      b = NULL;
+   }
+}
 
 template <typename T>
 DPM<T>::Alignment::~Alignment(){

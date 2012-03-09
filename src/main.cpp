@@ -7,6 +7,12 @@ using std::cin;
 #include <iomanip>
 using std::setw;
 
+#include <vector>
+using std::vector;
+
+#include <algorithm>
+using std::copy;
+
 #include <climits>
 
 #include "../include/DNA.hpp"
@@ -41,14 +47,26 @@ int main(int argc, const char *argv[])
    DPM<int> matrix(a, b);
 
    // get iterators from it
-   DPM<int>::Iterator it = matrix.begin();
-   DPM<int>::Iterator end= matrix.end();
+   DPM<int>::Iterator mit = matrix.begin();
+   DPM<int>::Iterator mend= matrix.end();
+
+   vector<DPM<int>::Alignment> testVect;
+   //testVect.resize(128);
+   vector<DPM<int>::Alignment>::iterator vit = testVect.begin();
+
+   copy(mend, mit, vit);
+
+   vit = testVect.begin();
+   vector<DPM<int>::Alignment>::iterator vend = testVect.end();
+
+   mit = matrix.begin();
+   mend= matrix.end();
 
    // iterate through the results
-   while (it != end){
-      (*it).print();
+   while (mit != mend){
+      (*mit).print();
       cout << endl;
-      ++it;
+      ++mit;
    }
 
    return 0;
