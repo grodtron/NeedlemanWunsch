@@ -111,7 +111,7 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          // starting from the NULL terminator, up to BUT NOT INCLUDING
          // the terminating NULL
          a[index] = ((currentC.flags & DPM<T>::H_GAP) ? '-' : A[currentC.i]);
-         a[index] = ((currentC.flags & DPM<T>::V_GAP) ? '-' : B[currentC.j]);
+         b[index] = ((currentC.flags & DPM<T>::V_GAP) ? '-' : B[currentC.j]);
          ++index;
          currentC.flags |= DPM::VISITED;
 
@@ -231,29 +231,25 @@ typename DPM<T>::Iterator DPM<T>::end(){
    return it;
 }
 
-/*
-template <typename T>
-void DPM<T>::next(){
-   // TODO - define an iterator, and possibly a some kind of Match struct
-   // and use them for this functionality
-   //_traceBack();
-   //cout << (currentA+2) << endl
-   //     << (currentB+2) << endl;
-}
-*/
 ///////////////////////////////////////////////////////////////
 //                                                           //
 //                        Iterator                           //
 //                                                           //
 ///////////////////////////////////////////////////////////////
 
-
+template <typename T>
+DPM<T>::Iterator::Iterator(const DPM<T> & parent) : parent(parent), index(0) {
+     a = new char[parent.width + parent.height]; 
+     b = new char[parent.width + parent.height]; 
+     a[0] = '\0';
+     b[0] = '\0';
+}
 
 template <typename T>
-DPM<T>::Iterator::Iterator() : parent(NULL) {}
-
-template <typename T>
-DPM<T>::Iterator::Iterator(const DPM<T> & parent) : parent(parent) {}
+DPM<T>::Iterator::~Iterator(){
+   delete [] a;
+   delete [] b;
+}
 
 template <typename T>
 bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
@@ -264,7 +260,6 @@ bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
 template <typename T>
 bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){ return !operator==(other); }
 
-///*
 // de-reference
 template <typename T>
 typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
@@ -272,9 +267,7 @@ typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
       parent._traceBack(currentStack, a, b, index);
       incrementBeforeAccess = false;
    }
-   //return parent.currentAlignment;
-   // TODO - make this proper
-   return DPM<T>::Alignment();
+   return DPM<T>::Alignment(a, b, index);
 }
 
 // pre-increment
@@ -287,7 +280,7 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
    parent._traceBack(currentStack, a, b, index);
    return *this;
 }
-//*/
+
 // post-increment
 template <typename T>
 typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (int){
@@ -297,5 +290,27 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (int){
    incrementBeforeAccess = true;
    return *this;
 }
-//*/
 
+template <typename T>
+DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) {  ;}
+
+template <typename T>
+DPM<T>::Alignment::~Alignment(){
+   if(a) delete[] a;
+   if(b) delete[] b;
+}
+
+template <typename T>
+DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
+   this->a = new char[len];
+   this->b = new char[len];
+   for(size_t i = 0; i < len; ++i){
+      this->a[i] = a[len - i - 1];
+      this->b[i] = b[len - i - 1];
+   }
+}
+
+template <typename T>
+void DPM<T>::Alignment::print(){
+   cout << a << endl << b << endl;
+}

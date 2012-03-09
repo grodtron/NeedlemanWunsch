@@ -58,11 +58,13 @@ class DPM{
       // TODO - info about match types could be added here to extend to fancier
       // printing modes, such as ANSI or HTML
       class Alignment{
+            friend class DPM<T>::Iterator;
             char * a;
             char * b;
-            Alignment(char * a, char * b);
+            Alignment(char * a, char * b, size_t len);
          public:
             Alignment();
+           ~Alignment();
             void print();
       };
 
@@ -85,7 +87,7 @@ class DPM{
             char * b;
             size_t index;
          public:
-            Iterator();
+           ~Iterator();
             bool operator==(const DPM<T>::Iterator & other);
             bool operator!=(const DPM<T>::Iterator & other);
             //DPM<T>::Alignment   operator*();

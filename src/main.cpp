@@ -38,8 +38,9 @@ int main(int argc, const char *argv[])
    DPM<int>::Iterator end= matrix.end();
 
    while (it != end){
-      ++it;
       (*it).print();
+      cout << endl;
+      ++it;
    }
 
 
@@ -52,8 +53,8 @@ int main(int argc, const char *argv[])
    matrix.next();
    cout << endl << endl;
 */
-   cout << "the sequences were: " << endl; 
-   cout << a << endl << b << endl;
+   //cout << "the sequences were: " << endl; 
+   //cout << a << endl << b << endl;
 
    return 0;
 }
