@@ -21,11 +21,12 @@ template <typename T> T max(T a, T b, T c){
 //                                         //
 /////////////////////////////////////////////
 
+// Initialization
 template <typename T>
-void DPM<T>::_fill(){
+void DPM<T>::_init(){
 
-   bool notYetAllocated = false;
    // allocate matrix if it hasn't been already
+   bool notYetAllocated = false;
    if(!matrix){
       matrix = new DPM<T>::MatrixCell*[width];
       notYetAllocated = true;
@@ -107,11 +108,20 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          currentStack.pop_back();
          --index;
       }else{
-         // TODO - copy strings into some kind of Alignment struct/class BACKWARDS
-         // starting from the NULL terminator, up to BUT NOT INCLUDING
-         // the terminating NULL
-         a[index] = ((currentC.flags & DPM<T>::H_GAP) ? '-' : A[currentC.i]);
-         b[index] = ((currentC.flags & DPM<T>::V_GAP) ? '-' : B[currentC.j]);
+         // TODO - currently chars are being placed at the wrong edge of the gaps
+         // fix this, probably by moving it into the inside of the loops and keeping i and j indexes seperate from index
+         if(currentC.flags == DPM<T>::VERTICAL){
+            a[index] = '-';
+            b[index] = B[currentC.j + 1];
+         }else if(currentC.flags == DPM<T>::HORIZONTAL){
+            a[index] = A[currentC.i + 1];
+            b[index] = '-';
+         }else if(currentC.flags == DPM<T>::DIAGONAL){
+            a[index] = A[currentC.i + 1];
+            b[index] = B[currentC.j + 1];
+         }else{
+            // this is an error
+         }
          ++index;
          currentC.flags |= DPM::VISITED;
 
@@ -120,21 +130,21 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
                child = DPM<T>::StackCell();
                child.i = currentC.i;
                child.j = currentC.j - 1;
-               child.flags = DPM<T>::H_GAP;
+               child.flags = DPM<T>::VERTICAL;
                currentStack.push_back(child);
             }
             if(currentM.direction & DPM<T>::HORIZONTAL){
                child = DPM<T>::StackCell();
                child.i = currentC.i - 1;
                child.j = currentC.j;
-               child.flags = DPM<T>::V_GAP;
+               child.flags = DPM<T>::HORIZONTAL;
                currentStack.push_back(child);
             }
             if(currentM.direction & DPM<T>::DIAGONAL){
                child = DPM<T>::StackCell();
                child.i = currentC.i - 1;
                child.j = currentC.j - 1;
-               child.flags = 0;
+               child.flags = DPM<T>::DIAGONAL;
                currentStack.push_back(child);
             }
          }else{
@@ -167,27 +177,23 @@ T DPM<T>::similarity(size_t i, size_t j){
 /////////////////////////////////////////////
 
 // constructor!
-// (in case it wasn't obvious)
 template <typename T>
 DPM<T>::DPM(DNA a, DNA b)
 : A(a), B(b), matrix(NULL), matchScore(3), gapScore(-1), misMatchScore(-1)
 {
    width  = A.size();
    height = B.size();
+   _init();
 }
 
-template <typename T>
-DPM<T>::DPM()
-: width(0), height(0), matrix(NULL)
-{
-}
-
-// just have to make sure that the matrix is freed
 template <typename T>
 DPM<T>::~DPM(){
    deleteMatrix();
 }
 
+// TODO - is having this as a seperate function actually useful?
+// if it is, then make sure that it is private (no way in hell it should
+// be public)
 template <typename T>
 void DPM<T>::deleteMatrix(){
    if(matrix){
@@ -200,11 +206,7 @@ void DPM<T>::deleteMatrix(){
    matrix = NULL;
 }
 
-template <typename T>
-void DPM<T>::align(){
-   _fill();
-}
-
+// TODO - better constructor for Iterator?
 template <typename T>
 typename DPM<T>::Iterator DPM<T>::begin(){
    DPM<T>::Iterator it(*this);
@@ -251,15 +253,33 @@ DPM<T>::Iterator::~Iterator(){
    delete [] b;
 }
 
+// TODO - more thorough equality checking. Use short circuits to check in this order:
+// index
+// stack.size()
+// &parent
+// stack elements
+//
+// better idea - keep a counter var, then all that's necessary to check is counter == counter and
+// parent == parent. Yep, that's better. Except.... stack size
+//
+// counter to compare non-end iterators.... could break when there's millions - billions of possibilities....
+//
+// maybe keep simple and just compare stacks. Short circuiting on stack size should prevent
+// actually needing to do a real stack comparison, besides, most of the stack differences should come near the top
+// make sure that we break out of the compare loop early!
+//
 template <typename T>
 bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
    return        //other.parent == parent
        /*&&*/ currentStack.size() == other.currentStack.size();
 }
 
+// TODO - define == in terms of !=, since it's probably used more.... maybe this is micro-opt
+// actually, yes, it is
 template <typename T>
 bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){ return !operator==(other); }
 
+// TODO - verify that post/pre incrementing works as expected
 // de-reference
 template <typename T>
 typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
@@ -292,7 +312,7 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (int){
 }
 
 template <typename T>
-DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) {  ;}
+DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { }
 
 template <typename T>
 DPM<T>::Alignment::~Alignment(){
@@ -310,6 +330,7 @@ DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
    }
 }
 
+// TODO - fancier printing methods (ANSI, maybe HTML)
 template <typename T>
 void DPM<T>::Alignment::print(){
    cout << a << endl << b << endl;

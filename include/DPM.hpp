@@ -38,7 +38,7 @@ class DPM{
       MatrixCell ** matrix;
 
       // initialize the matrix
-      void _fill();
+      void _init();
 
       // get alignment from initialized matrix
       void _traceBack(list<StackCell> & current, char * a, char * b, size_t & index) const;
@@ -97,13 +97,10 @@ class DPM{
       };
 
       DPM(DNA a, DNA b);
-      DPM();
      ~DPM();
       void setMatchScore(T val);
       void setMisMatchScore(T val);
       void setGapPenalty(T val);
-
-      void align();
 
       Iterator begin();
       Iterator end();
@@ -115,8 +112,6 @@ class DPM{
 
       // traceback flags
       static const unsigned char VISITED    = 1 << 3;
-      static const unsigned char V_GAP      = 1 << 4;
-      static const unsigned char H_GAP      = 1 << 5;
 };
 
 #endif
