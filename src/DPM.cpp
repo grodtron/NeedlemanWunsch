@@ -224,11 +224,11 @@ template <typename T>
 typename DPM<T>::Iterator DPM<T>::end(){
    DPM<T>::Iterator it(*this);
    it.index = 0;
-   it.incrementBeforeAccess = true;
+   //it.incrementBeforeAccess = true;
    it.currentStack.resize(0);
-   it.currentStack.back().i = 0;
-   it.currentStack.back().j = 0;
-   it.currentStack.back().flags = 0;
+   //it.currentStack.back().i = 0;
+   //it.currentStack.back().j = 0;
+   //it.currentStack.back().flags = 0;
    // by value
    return it;
 }
@@ -325,8 +325,9 @@ DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
    this->a = new char[len];
    this->b = new char[len];
    for(size_t i = 0; i < len; ++i){
-      this->a[i] = a[len - i - 1];
-      this->b[i] = b[len - i - 1];
+      // the sequences are copied in reverse. (len - 1) is the last index
+      this->a[i] = a[(len - 1) - i];
+      this->b[i] = b[(len - 1) - i];
    }
 }
 
