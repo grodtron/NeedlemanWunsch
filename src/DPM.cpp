@@ -235,30 +235,30 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator=(const DPM<T>::Iterator &
    parent = other.parent;
    flags = other.flags;
    index = other.index;
+   currentStack = list<DPM<T>::StackCell>(other.currentStack);
    a = new char[parent.width + parent.height]; 
    b = new char[parent.width + parent.height]; 
    size_t i;
-   for(i = 0; other.a[i] != '\0'; ++i){
+   // NB - iterator holds the string BACKWARDS!!
+   for(i = 0; i < (parent.height + parent.width); ++i){
       a[i] = other.a[i];
       b[i] = other.b[i];
    }
-   a[i] = '\0';
-   b[i] = '\0';
    return *this;
 }
 
 // copy cosntructor
 template <typename T>
-DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other) : parent(other.parent), flags(other.flags), index(other.index) {
+DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other)
+: parent(other.parent), flags(other.flags), currentStack(list<DPM<T>::StackCell>(other.currentStack)), index(other.index) {
    a = new char[parent.width + parent.height]; 
    b = new char[parent.width + parent.height]; 
    size_t i;
-   for(i = 0; other.a[i] != '\0'; ++i){
+   // NB - iterator holds the string BACKWARDS!!
+   for(i = 0; i < (parent.height + parent.width); ++i){
       a[i] = other.a[i];
       b[i] = other.b[i];
    }
-   a[i] = '\0';
-   b[i] = '\0';
 }
 
 template <typename T>

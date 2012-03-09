@@ -50,17 +50,17 @@ int main(int argc, const char *argv[])
    DPM<int>::Iterator mit = matrix.begin();
    DPM<int>::Iterator mend= matrix.end();
 
-   vector<DPM<int>::Alignment> testVect;
+   //vector<DPM<int>::Alignment> testVect;
    //testVect.resize(128);
-   vector<DPM<int>::Alignment>::iterator vit = testVect.begin();
+   //vector<DPM<int>::Alignment>::iterator vit = testVect.begin();
 
-   copy(mend, mit, vit);
+   //copy(mend, mit, vit);
 
-   vit = testVect.begin();
-   vector<DPM<int>::Alignment>::iterator vend = testVect.end();
+   //vit = testVect.begin();
+   //vector<DPM<int>::Alignment>::iterator vend = testVect.end();
 
-   mit = matrix.begin();
-   mend= matrix.end();
+   mit = DPM<int>::Iterator(matrix.begin());
+   mend= DPM<int>::Iterator(matrix.end());
 
    // iterate through the results
    while (mit != mend){
