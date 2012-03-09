@@ -22,25 +22,17 @@ template <typename T> T max(T a, T b, T c){
 /////////////////////////////////////////////
 
 // Initialization
+// This should only ever be called ONCE. There will be memory leaks otherwise
 template <typename T>
 void DPM<T>::_init(){
 
-   // allocate matrix if it hasn't been already
-   // // TODO - remove not - yet allocated thing
-   // there should not be a case where the matrix needs to be re-allocated
-   bool notYetAllocated = false;
-   if(!matrix){
-      matrix = new DPM<T>::MatrixCell*[width];
-      notYetAllocated = true;
-   }
+   // allocate the top level of the matrix
+   matrix = new DPM<T>::MatrixCell*[width];
 
    for(size_t i = 0; i < width; ++i){
 
-      // if the matrix hasn't already been allocated, then we need
-      // to allocate space for each column
-      if (notYetAllocated){
-         matrix[i] = new DPM<T>::MatrixCell[height];
-      }
+      // allocate the second level of teh matrix
+      matrix[i] = new DPM<T>::MatrixCell[height];
 
       for(size_t j = 0; j < height; ++j){
          if(i == 0 && j == 0){
@@ -111,8 +103,6 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          currentStack.pop_back();
          --index;
       }else{
-         // TODO - currently chars are being placed at the wrong edge of the gaps
-         // fix this, probably by moving it into the inside of the loops and keeping i and j indexes seperate from index
          if(currentC.flags == DPM<T>::VERTICAL){
             a[index] = '-';
             b[index] = B[currentC.j];
@@ -122,9 +112,11 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          }else if(currentC.flags == DPM<T>::DIAGONAL){
             a[index] = A[currentC.i];
             b[index] = B[currentC.j];
-         }else{
-            // this is an error
-         }
+         }/*else{
+            If there is a bug it could be from getting to this point
+            shouldn't happen, the flags are currently set and defined properly
+            but if something comes up, this could be a good place to look
+         }*/
          ++index;
          currentC.flags |= DPM::VISITED;
 
@@ -188,22 +180,11 @@ DPM<T>::DPM(DNA a, DNA b)
 
 template <typename T>
 DPM<T>::~DPM(){
-   deleteMatrix();
-}
-
-// TODO - is having this as a seperate function actually useful?
-// if it is, then make sure that it is private (no way in hell it should
-// be public)
-template <typename T>
-void DPM<T>::deleteMatrix(){
-   if(matrix){
-      for(size_t i = 0; i < width; ++i){
-         delete[] matrix[i];
-         matrix[i] = NULL;
-      }
-      delete[] matrix;
+   for(size_t i = 0; i < width; ++i){
+      delete[] matrix[i];
+      matrix[i] = NULL;
    }
-   matrix = NULL;
+   delete[] matrix;
 }
 
 // TODO - better constructor for Iterator?

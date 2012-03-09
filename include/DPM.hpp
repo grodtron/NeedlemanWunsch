@@ -48,7 +48,6 @@ class DPM{
       T misMatchScore;
       T similarity(size_t i, size_t j);
 
-      void deleteMatrix();
    public:
       class  Alignment;
       class  Iterator;
