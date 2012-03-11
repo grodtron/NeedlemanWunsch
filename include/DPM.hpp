@@ -65,6 +65,7 @@ class DPM{
             Alignment();
             Alignment(const DPM<T>::Alignment & other);
            ~Alignment();
+            DPM<T>::Alignment & operator=(const DPM<T>::Alignment & other);
             void print();
       };
 
@@ -75,6 +76,7 @@ class DPM{
             // a reference to the DPM object that this iterator
             // refers to
             DPM<T> & parent;
+            DPM<T>::Alignment currentAlignment;
             // a flag that is set when post-increment is used.
             // it indicates that the next time the alignment this
             // object points to is requested,
@@ -93,7 +95,7 @@ class DPM{
             bool operator!=(const DPM<T>::Iterator & other);
             //DPM<T>::Alignment   operator*();
             DPM<T>::Iterator & operator=(const DPM<T>::Iterator & other);
-            Alignment   operator*();
+            Alignment operator*();
             DPM<T>::Iterator  & operator++();// {++p;return *this;}
             DPM<T>::Iterator    operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
             static const unsigned char  INCREMENT_BEFORE_ACCESS = 1 << 0;

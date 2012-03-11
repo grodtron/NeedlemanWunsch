@@ -93,7 +93,7 @@ void DPM<T>::_init(){
 
 template <typename T>
 void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char * b, size_t & index ) const{
-   while(currentStack.size()){
+   while(!currentStack.empty()){
 
       DPM<T>::StackCell & currentC = currentStack.back();
       DPM<T>::MatrixCell  currentM = matrix[currentC.i][currentC.j];
@@ -150,8 +150,10 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
    // if we got to here, then there are no more paths.
    // set everything to null.
    // TODO - end iteration
-   *a = '\0';
-   *b = '\0';
+   a[0] = '\0';
+   b[0] = '\0';
+   a[1] = 1;
+   b[1] = 1;
    index = 0;
    return;
 }
@@ -208,11 +210,12 @@ typename DPM<T>::Iterator DPM<T>::end(){
    it.index = 0;
    //it.incrementBeforeAccess = true;
    it.currentStack.resize(0);
-   it.flags = DPM<T>::Iterator::ITERATION_COMPLETE;
    //it.currentStack.back().i = 0;
    //it.currentStack.back().j = 0;
    //it.currentStack.back().flags = 0;
    // by value
+   ++it;
+   it.flags = DPM<T>::Iterator::ITERATION_COMPLETE;
    return it;
 }
 
@@ -223,7 +226,10 @@ typename DPM<T>::Iterator DPM<T>::end(){
 ///////////////////////////////////////////////////////////////
 
 template <typename T>
-DPM<T>::Iterator::Iterator(DPM<T> & parent) : parent(parent), flags(0), index(0) {
+DPM<T>::Iterator::Iterator(DPM<T> & parent)
+: parent(parent), currentAlignment(DPM<T>::Alignment()),
+  flags(0), index(0) {
+
    a = new char[parent.width + parent.height]; 
    b = new char[parent.width + parent.height]; 
    a[0] = '\0';
@@ -235,6 +241,7 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator=(const DPM<T>::Iterator &
    parent = other.parent;
    flags = other.flags;
    index = other.index;
+   currentAlignment = DPM<T>::Alignment(other.currentAlignment);
    currentStack = list<DPM<T>::StackCell>(other.currentStack);
    a = new char[parent.width + parent.height]; 
    b = new char[parent.width + parent.height]; 
@@ -250,7 +257,10 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator=(const DPM<T>::Iterator &
 // copy cosntructor
 template <typename T>
 DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other)
-: parent(other.parent), flags(other.flags), currentStack(list<DPM<T>::StackCell>(other.currentStack)), index(other.index) {
+: parent(other.parent),
+  currentAlignment (DPM<T>::Alignment(other.currentAlignment)), flags(other.flags),
+  currentStack(list<DPM<T>::StackCell>(other.currentStack)), index(other.index) {
+
    a = new char[parent.width + parent.height]; 
    b = new char[parent.width + parent.height]; 
    size_t i;
@@ -287,8 +297,10 @@ DPM<T>::Iterator::~Iterator(){
 //
 template <typename T>
 bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
+   cout << "Comparison - flags == other.flags? " << (flags == other.flags ? "yes" : "no") << endl;
+   cout << "   flags: " << (int)flags << " other.flags:  " << (int)other.flags << endl;
    return        //other.parent == parent
-      /*&&*/ (flags == other.flags && currentStack.size() == other.currentStack.size());
+      /*&&*/ (flags == other.flags);// && currentStack.size() == other.currentStack.size());
 }
 
 // TODO - define == in terms of !=, since it's probably used more.... maybe this is micro-opt
@@ -300,7 +312,7 @@ bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){ return !opera
 // de-reference
 template <typename T>
 typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
-   return DPM<T>::Alignment(a, b, index);
+   return currentAlignment;
 }
 
 
@@ -310,7 +322,8 @@ typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
 template <typename T>
 typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
    parent._traceBack(currentStack, a, b, index);
-   if(a[0] == '\0'){ flags |= ITERATION_COMPLETE; }
+   currentAlignment =     DPM<T>::Alignment(a, b, index);
+   if(a[0] == '\0' && a[1] == 1){ flags = DPM<T>::Iterator::ITERATION_COMPLETE; cout << "Iteration Complete Bitches!" << endl; }
    return *this;
 }
 
@@ -323,10 +336,11 @@ typename DPM<T>::Iterator  DPM<T>::Iterator::operator++ (int){
 }
 
 template <typename T>
-DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { }
+DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { cout << "default Alignment constructor. " << this << endl; }
 
 template <typename T>
 DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
+   cout << "copy Alignment constructor. " << this << endl;
    if(other.a){
       size_t len;
       for(len = 0; other.a[len] != '\0'; ++len);
@@ -346,20 +360,52 @@ DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
    }
 }
 
+//TODO - "this" is NULL
+// TODO - it runs, but somehow there are still "Invalid reads" being caught by VALGRIND
+template <typename T>
+typename DPM<T>::Alignment & DPM<T>::Alignment::operator=(const DPM<T>::Alignment & other) {
+   cout << "Alignment operator = ." << endl;
+   if (a) { delete[] a; a = NULL; }
+   if (b) { delete[] b; b = NULL; }
+   if(other.a){
+      size_t len;
+      for(len = 0; other.a[len] != '\0'; ++len);
+      // len is 1 + the index of the NULL terminator
+      ++len;
+
+      a = new char[len];
+      b = new char[len];
+
+      for(size_t i = 0; i < len; ++i){
+         a[i] = other.a[i];
+         b[i] = other.b[i];
+      }
+   }else{
+      a = NULL;
+      b = NULL;
+   }
+   return *this;
+}
+
 template <typename T>
 DPM<T>::Alignment::~Alignment(){
-   if(a) delete[] a;
-   if(b) delete[] b;
+   if (a) delete[] a;
+   if (b) delete[] b;
 }
 
 template <typename T>
 DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
-   this->a = new char[len];
-   this->b = new char[len];
-   for(size_t i = 0; i < len; ++i){
-      // the sequences are copied in reverse. (len - 1) is the last index
-      this->a[i] = a[(len - 1) - i];
-      this->b[i] = b[(len - 1) - i];
+   if(len){
+      this->a = new char[len];
+      this->b = new char[len];
+      for(size_t i = 0; i < len; ++i){
+         // the sequences are copied in reverse. (len - 1) is the last index
+         this->a[i] = a[(len - 1) - i];
+         this->b[i] = b[(len - 1) - i];
+      }
+   }else{
+      this->a = NULL;
+      this->b = NULL;
    }
 }
 

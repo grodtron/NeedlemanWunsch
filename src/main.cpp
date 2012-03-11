@@ -13,6 +13,9 @@ using std::vector;
 #include <algorithm>
 using std::copy;
 
+#include <iterator>
+using std::back_inserter;
+
 #include <climits>
 
 #include "../include/DNA.hpp"
@@ -50,23 +53,23 @@ int main(int argc, const char *argv[])
    DPM<int>::Iterator mit = matrix.begin();
    DPM<int>::Iterator mend= matrix.end();
 
-   //vector<DPM<int>::Alignment> testVect;
-   //testVect.resize(128);
-   //vector<DPM<int>::Alignment>::iterator vit = testVect.begin();
+   vector<DPM<int>::Alignment> testVect;
+   //testVect.resize(10);
 
-   //copy(mend, mit, vit);
+   //copy(mend, mit, back_inserter(testVect));
+   copy(mit, mend, back_inserter(testVect));
 
-   //vit = testVect.begin();
-   //vector<DPM<int>::Alignment>::iterator vend = testVect.end();
+   vector<DPM<int>::Alignment>::iterator vit = testVect.begin();
+   vector<DPM<int>::Alignment>::iterator vend = testVect.end();
 
-   mit = DPM<int>::Iterator(matrix.begin());
-   mend= DPM<int>::Iterator(matrix.end());
+   //mit = DPM<int>::Iteratormatrix.begin();
+   //mend= DPM<int>::Iterator(matrix.end());
 
    // iterate through the results
-   while (mit != mend){
-      (*mit).print();
+   while (vit != vend){
+      (*vit).print();
       cout << endl;
-      ++mit;
+      ++vit;
    }
 
    return 0;
