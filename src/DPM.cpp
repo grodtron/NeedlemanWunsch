@@ -189,6 +189,8 @@ DPM<T>::~DPM(){
    delete[] matrix;
 }
 
+// TODO - major cleanup of EVERYTHING below this line! (+ more testing)
+
 // TODO - better constructor for Iterator?
 template <typename T>
 typename DPM<T>::Iterator DPM<T>::begin(){
