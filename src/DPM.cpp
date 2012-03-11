@@ -11,6 +11,7 @@ using std::copy;
 #include "../include/DPM.hpp"
 
 // little util
+// TODO - handle this properly
 template <typename T> T max(T a, T b, T c){
    return (a > b) ? (a > c ? a : c) : (b > c ? b : c);
 }
@@ -297,6 +298,8 @@ DPM<T>::Iterator::~Iterator(){
 // actually needing to do a real stack comparison, besides, most of the stack differences should come near the top
 // make sure that we break out of the compare loop early!
 //
+// Actually - even more better yet, just compare currentAlignment. e.g. create DPM<T>::Alignment::operator==
+//
 template <typename T>
 bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
    cout << "Comparison - flags == other.flags? " << (flags == other.flags ? "yes" : "no") << endl;
@@ -340,6 +343,8 @@ typename DPM<T>::Iterator  DPM<T>::Iterator::operator++ (int){
 template <typename T>
 DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { cout << "default Alignment constructor. " << this << endl; }
 
+// TODO - this and operator= are VERY not dry. Deal with that somehow
+// this->operator=(other) ?
 template <typename T>
 DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
    cout << "copy Alignment constructor. " << this << endl;
@@ -362,17 +367,20 @@ DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
    }
 }
 
-//TODO - "this" is NULL
-// TODO - it runs, but somehow there are still "Invalid reads" being caught by VALGRIND
 template <typename T>
 typename DPM<T>::Alignment & DPM<T>::Alignment::operator=(const DPM<T>::Alignment & other) {
-   cout << "Alignment operator = ." << endl;
-   if (a) { delete[] a; a = NULL; }
-   if (b) { delete[] b; b = NULL; }
+
+   // if this Alignment has already been initialized, we need to make sure that
+   // all memory is freed before re-initializing
+   if (a) { delete[] a; }
+   if (b) { delete[] b; }
+
+   // If the other object has been initialized, then initialize this one and copy
+   // everything over from 'other'
    if(other.a){
+
       size_t len;
       for(len = 0; other.a[len] != '\0'; ++len);
-      // len is 1 + the index of the NULL terminator
       ++len;
 
       a = new char[len];
@@ -382,10 +390,13 @@ typename DPM<T>::Alignment & DPM<T>::Alignment::operator=(const DPM<T>::Alignmen
          a[i] = other.a[i];
          b[i] = other.b[i];
       }
+   // if the other object has not been initialized, then set our pointers to NULL
    }else{
       a = NULL;
       b = NULL;
    }
+
+   // return a reference to this
    return *this;
 }
 
@@ -412,6 +423,7 @@ DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
 }
 
 // TODO - fancier printing methods (ANSI, maybe HTML)
+// Also, pass an std::ostream for more flexibility
 template <typename T>
 void DPM<T>::Alignment::print(){
    cout << a << endl << b << endl;

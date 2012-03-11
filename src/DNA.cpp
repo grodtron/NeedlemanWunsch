@@ -7,6 +7,8 @@ using std::istream;
 
 #include "../include/DNA.hpp"
 
+// TODO - document thoroughly
+
 
 DNA::DNA(char * sequence) : sequence(NULL), length(0){
    setSequence(sequence);
