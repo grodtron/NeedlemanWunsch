@@ -107,7 +107,6 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          currentStack.pop_back();
          --index;
       }else{
-         cout << "i=" << currentC.i << " & j=" << currentC.j << endl; 
          if(currentC.flags == DPM<T>::VERTICAL){
             a[index] = '-';
             b[index] = B[currentC.j];
@@ -198,36 +197,42 @@ DPM<T>::~DPM(){
    delete[] matrix;
 }
 
-// TODO - major cleanup of EVERYTHING below this line! (+ more testing)
-
-// TODO - better constructor for Iterator?
 template <typename T>
 typename DPM<T>::Iterator DPM<T>::begin(){
+   // This function creates a new iterator that will yield
+   // all of the possible alignments for the current DPM
    DPM<T>::Iterator it(*this);
+
    it.index = 0;
    it.flags = 0;
+
+   // the stack acts as a bookmark, holding a spot within
+   // the traceback phase of the algorithm. Starting with
+   // only the first cell will cause every alignment to be
+   // generated
    it.currentStack.push_back(DPM<T>::StackCell());
    it.currentStack.back().i = width - 1;
    it.currentStack.back().j = height - 1;
    it.currentStack.back().flags = 0;
+
    ++it;
-   // by value
-   return it;
+
+   return it /* by value */;
 }
 
 template <typename T>
 typename DPM<T>::Iterator DPM<T>::end(){
    DPM<T>::Iterator it(*this);
+
+   // an empty stack means that every alignment has been found
    it.index = 0;
-   //it.incrementBeforeAccess = true;
    it.currentStack.resize(0);
-   //it.currentStack.back().i = 0;
-   //it.currentStack.back().j = 0;
-   //it.currentStack.back().flags = 0;
-   // by value
+
+   // incrementing the empty iterator will cause all of the correct
+   // flags to be set that indicate that it is at the end of iteration
    ++it;
-   it.flags = DPM<T>::Iterator::ITERATION_COMPLETE;
-   return it;
+
+   return it /* by value */;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -236,6 +241,8 @@ typename DPM<T>::Iterator DPM<T>::end(){
 //                                                           //
 ///////////////////////////////////////////////////////////////
 
+// Iterator constructor - associates the iterator with a DPM object, and initializes it to
+// the right size
 template <typename T>
 DPM<T>::Iterator::Iterator(DPM<T> & parent)
 : parent(parent), currentAlignment(DPM<T>::Alignment()),
@@ -245,6 +252,24 @@ DPM<T>::Iterator::Iterator(DPM<T> & parent)
    b = new char[parent.width + parent.height]; 
    a[0] = '\0';
    b[0] = '\0';
+}
+
+// copy cosntructor
+template <typename T>
+DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other)
+: parent(other.parent),
+  currentAlignment (DPM<T>::Alignment(other.currentAlignment)), flags(other.flags),
+  currentStack(list<DPM<T>::StackCell>(other.currentStack)), index(other.index)
+
+{
+   a = new char[parent.width + parent.height]; 
+   b = new char[parent.width + parent.height]; 
+   size_t i;
+   // NB - iterator holds the string BACKWARDS!!
+   for(i = 0; i < (parent.height + parent.width); ++i){
+      a[i] = other.a[i];
+      b[i] = other.b[i];
+   }
 }
 
 template <typename T>
@@ -265,62 +290,26 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator=(const DPM<T>::Iterator &
    return *this;
 }
 
-// copy cosntructor
-// not dry - maybe use this->operator=(other)
-template <typename T>
-DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other)
-: parent(other.parent),
-  currentAlignment (DPM<T>::Alignment(other.currentAlignment)), flags(other.flags),
-  currentStack(list<DPM<T>::StackCell>(other.currentStack)), index(other.index) {
-
-   a = new char[parent.width + parent.height]; 
-   b = new char[parent.width + parent.height]; 
-   size_t i;
-   // NB - iterator holds the string BACKWARDS!!
-   for(i = 0; i < (parent.height + parent.width); ++i){
-      a[i] = other.a[i];
-      b[i] = other.b[i];
-   }
-}
-
 template <typename T>
 DPM<T>::Iterator::~Iterator(){
-   //cout << "Destructor!" << endl;
    if (a) delete [] a;
    if (b) delete [] b;
    a = NULL;
    b = NULL;
 }
 
-// TODO - more thorough equality checking. Use short circuits to check in this order:
-// index
-// stack.size()
-// &parent
-// stack elements
-//
-// better idea - keep a counter var, then all that's necessary to check is counter == counter and
-// parent == parent. Yep, that's better. Except.... stack size
-//
-// counter to compare non-end iterators.... could break when there's millions - billions of possibilities....
-//
-// maybe keep simple and just compare stacks. Short circuiting on stack size should prevent
-// actually needing to do a real stack comparison, besides, most of the stack differences should come near the top
-// make sure that we break out of the compare loop early!
-//
-// Actually - even more better yet, just compare currentAlignment. e.g. create DPM<T>::Alignment::operator==
-//
+// first check flags. In most cases we're checking an iterator against end(), in which case the flags
+// will differentiate them. If not, then we'll have to do a full string comparison between their alignment
+// objects, which is somewhat expensive
 template <typename T>
-bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
-   //cout << "Comparison - flags == other.flags? " << (flags == other.flags ? "yes" : "no") << endl;
-   //cout << "   flags: " << (int)flags << " other.flags:  " << (int)other.flags << endl;
-   return        //other.parent == parent
-      /*&&*/ (flags == other.flags);// && currentStack.size() == other.currentStack.size());
+bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other) const{
+   return (flags == other.flags && currentAlignment == other.currentAlignment);
 }
 
-// TODO - define == in terms of !=, since it's probably used more.... maybe this is micro-opt
-// actually, yes, it is
 template <typename T>
-bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){ return !operator==(other); }
+bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){
+   return !operator==(other);
+}
 
 // TODO - verify that post/pre incrementing works as expected
 // de-reference
@@ -330,8 +319,12 @@ typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
 }
 
 
-            //DPM<T>::Iterator  & operator++();// {++p;return *this;}
-            //DPM<T>::Iterator    operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
+// for reference this is how post/pre-increment is handled
+//
+//DPM<T>::Iterator & operator++();   {++p;return *this;}
+//DPM<T>::Iterator   operator++(int) {myiterator tmp(*this); operator++(); return tmp;}
+
+
 // pre-increment
 template <typename T>
 typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
@@ -349,6 +342,7 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
 }
 
 // post-increment
+// (return a temporary iterator by value)
 template <typename T>
 typename DPM<T>::Iterator  DPM<T>::Iterator::operator++ (int){
    Iterator tmp(*this);
@@ -359,11 +353,8 @@ typename DPM<T>::Iterator  DPM<T>::Iterator::operator++ (int){
 template <typename T>
 DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { }
 
-// TODO - this and operator= are VERY not dry. Deal with that somehow
-// this->operator=(other) ?
 template <typename T>
 DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
-   //cout << "copy Alignment constructor. " << this << endl;
    if(other.a){
       size_t len;
       for(len = 0; other.a[len] != '\0'; ++len);
@@ -384,10 +375,31 @@ DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
 }
 
 template <typename T>
+bool DPM<T>::Alignment::operator==(const DPM<T>::Alignment & other) const{
+
+   // only checking a, because b should be the same, if it's not, then we have bigger
+   // problems
+   if(a == NULL){
+      return other.a == NULL;
+   }
+
+   size_t i = 0;
+
+   while(
+      a[i] == other.a[i]
+      &&
+      b[i] == other.b[i]
+   ){
+      if( a[i] == '\0' ) return true;
+      ++i;
+   }
+
+   return false;
+}
+
+template <typename T>
 typename DPM<T>::Alignment & DPM<T>::Alignment::operator=(const DPM<T>::Alignment & other) {
 
-   // if this Alignment has already been initialized, we need to make sure that
-   // all memory is freed before re-initializing
    if (a) { delete[] a; }
    if (b) { delete[] b; }
 
@@ -412,8 +424,7 @@ typename DPM<T>::Alignment & DPM<T>::Alignment::operator=(const DPM<T>::Alignmen
       b = NULL;
    }
 
-   // return a reference to this
-   return *this;
+   return *this /* by reference */;
 }
 
 template <typename T>

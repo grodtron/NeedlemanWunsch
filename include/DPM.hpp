@@ -66,6 +66,7 @@ class DPM{
             Alignment(const DPM<T>::Alignment & other);
            ~Alignment();
             DPM<T>::Alignment & operator=(const DPM<T>::Alignment & other);
+            bool operator==(const DPM<T>::Alignment & other) const;
             void print();
       };
 
@@ -91,7 +92,7 @@ class DPM{
          public:
            ~Iterator();
             Iterator(const DPM<T>::Iterator & other);
-            bool operator==(const DPM<T>::Iterator & other);
+            bool operator==(const DPM<T>::Iterator & other) const;
             bool operator!=(const DPM<T>::Iterator & other);
             //DPM<T>::Alignment   operator*();
             DPM<T>::Iterator & operator=(const DPM<T>::Iterator & other);

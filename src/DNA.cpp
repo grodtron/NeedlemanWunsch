@@ -72,8 +72,10 @@ void DNA::setSequence(char * sequence){
 }
 
 ostream & operator<< (ostream & s, const DNA & d){
-   //s << d.sequence;
-   s << "TODO - fixme [ostream & DNA::operator<< ()] (no more NULL terminators!)";
+   // these are not c-strings, so they have to be output like this
+   for(size_t i = 0; i < d.length; ++i){
+      s.put(d.sequence[i]);
+   }
    return s;
 }
 

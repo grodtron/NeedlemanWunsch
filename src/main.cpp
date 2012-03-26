@@ -72,5 +72,7 @@ int main(int argc, const char *argv[])
       ++vit;
    }
 
+   cout << endl << endl << "Original DNA was:" << endl << a << endl << b << endl;
+
    return 0;
 }
