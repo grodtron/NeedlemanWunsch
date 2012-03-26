@@ -2,6 +2,9 @@
 using std::cout;
 using std::endl;
 
+#include <iomanip>
+using std::setw;
+
 #include <string>
 using std::string;
 
@@ -65,7 +68,7 @@ void DPM<T>::_init(){
 
             // get the possible scores for this cell, keep
             // the max of the three possibilities
-            // the offset is for the blank rows along the edges
+            // the offset is for the blank rows along the edges (huh?)
             T dScore = dCell.score + similarity(i - 1, j - 1);
             T hScore = hCell.score + gapScore;
             T vScore = vCell.score + gapScore;
@@ -104,21 +107,29 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          currentStack.pop_back();
          --index;
       }else{
+         cout << "i=" << currentC.i << " & j=" << currentC.j << endl; 
          if(currentC.flags == DPM<T>::VERTICAL){
             a[index] = '-';
             b[index] = B[currentC.j];
+            // incrementing should always be done inside these conditionals
+            // otherwise we can increment without inserting a character
+            // (which we don't want)
+            ++index;
          }else if(currentC.flags == DPM<T>::HORIZONTAL){
             a[index] = A[currentC.i];
             b[index] = '-';
+            ++index;
          }else if(currentC.flags == DPM<T>::DIAGONAL){
             a[index] = A[currentC.i];
             b[index] = B[currentC.j];
+            ++index;
          }/*else{
             If there is a bug it could be from getting to this point
             shouldn't happen, the flags are currently set and defined properly
             but if something comes up, this could be a good place to look
+
+            this comment was surprisingly helpful
          }*/
-         ++index;
          currentC.flags |= DPM::VISITED;
 
          if(currentM.direction & (DPM<T>::VERTICAL|DPM<T>::HORIZONTAL|DPM<T>::DIAGONAL)){
@@ -150,11 +161,8 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
    }
    // if we got to here, then there are no more paths.
    // set everything to null.
-   // TODO - end iteration
    a[0] = '\0';
    b[0] = '\0';
-   a[1] = 1;
-   b[1] = 1;
    index = 0;
    return;
 }
@@ -258,6 +266,7 @@ typename DPM<T>::Iterator & DPM<T>::Iterator::operator=(const DPM<T>::Iterator &
 }
 
 // copy cosntructor
+// not dry - maybe use this->operator=(other)
 template <typename T>
 DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other)
 : parent(other.parent),
@@ -302,8 +311,8 @@ DPM<T>::Iterator::~Iterator(){
 //
 template <typename T>
 bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other){
-   cout << "Comparison - flags == other.flags? " << (flags == other.flags ? "yes" : "no") << endl;
-   cout << "   flags: " << (int)flags << " other.flags:  " << (int)other.flags << endl;
+   //cout << "Comparison - flags == other.flags? " << (flags == other.flags ? "yes" : "no") << endl;
+   //cout << "   flags: " << (int)flags << " other.flags:  " << (int)other.flags << endl;
    return        //other.parent == parent
       /*&&*/ (flags == other.flags);// && currentStack.size() == other.currentStack.size());
 }
@@ -326,9 +335,16 @@ typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
 // pre-increment
 template <typename T>
 typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
+   // get next alignment
    parent._traceBack(currentStack, a, b, index);
-   currentAlignment =     DPM<T>::Alignment(a, b, index);
-   if(a[0] == '\0' && a[1] == 1){ flags = DPM<T>::Iterator::ITERATION_COMPLETE; cout << "Iteration Complete Bitches!" << endl; }
+
+   // load it into an Alignment object
+   currentAlignment = DPM<T>::Alignment(a, b, index);
+
+   // check to see if we're at the end of the iteration (past the last alignment)
+   // set flags if we are
+   if(a[0] == '\0'){ flags = DPM<T>::Iterator::ITERATION_COMPLETE; }
+
    return *this;
 }
 
@@ -341,13 +357,13 @@ typename DPM<T>::Iterator  DPM<T>::Iterator::operator++ (int){
 }
 
 template <typename T>
-DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { cout << "default Alignment constructor. " << this << endl; }
+DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { }
 
 // TODO - this and operator= are VERY not dry. Deal with that somehow
 // this->operator=(other) ?
 template <typename T>
 DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
-   cout << "copy Alignment constructor. " << this << endl;
+   //cout << "copy Alignment constructor. " << this << endl;
    if(other.a){
       size_t len;
       for(len = 0; other.a[len] != '\0'; ++len);
@@ -409,13 +425,19 @@ DPM<T>::Alignment::~Alignment(){
 template <typename T>
 DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
    if(len){
-      this->a = new char[len];
-      this->b = new char[len];
+      this->a = new char[len + 1];
+      this->b = new char[len + 1];
       for(size_t i = 0; i < len; ++i){
          // the sequences are copied in reverse. (len - 1) is the last index
+         // NB - must use 'this->a', not just 'a' to avoid confusion with
+         // the 'a' and 'b' parameters
          this->a[i] = a[(len - 1) - i];
          this->b[i] = b[(len - 1) - i];
       }
+      // we have to add NULL terminators by hand, because they are not included
+      // in the strings that we will be given here
+      this->a[len] = '\0';
+      this->b[len] = '\0';
    }else{
       this->a = NULL;
       this->b = NULL;

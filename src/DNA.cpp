@@ -56,26 +56,24 @@ void DNA::setSequence(char * sequence){
    }
    // get the length of the sequence that was input
    for(length = 0; sequence[length] != '\0'; ++length);
-   // include null terminator
-   ++length;
+   // don't include null terminator
+   //
    // alocate space for the new sequence
    this->sequence = new char[length];
    // copy the string into the new sequence
    // throw exception if there is an invalid character present
-   for(size_t i = 0; i < length - 1; ++i){
+   for(size_t i = 0; i < length; ++i){
       char c = sequence[i];
       if(c != 'A' && c != 'C' && c != 'G' && c != 'T'){
          throw DNA::InvalidSequenceException(sequence, i);
       }
       this->sequence[i] = c;
    }
-   // this is not done inside the loop because it causes an exception to
-   // be thrown
-   this->sequence[length - 1] = '\0';
 }
 
 ostream & operator<< (ostream & s, const DNA & d){
-   s << d.sequence;
+   //s << d.sequence;
+   s << "TODO - fixme [ostream & DNA::operator<< ()] (no more NULL terminators!)";
    return s;
 }
 
