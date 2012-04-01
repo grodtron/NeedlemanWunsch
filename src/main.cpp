@@ -19,14 +19,9 @@ using std::back_inserter;
 #include <climits>
 
 #include "../include/DNA.hpp"
-#include "DPM.cpp"
+#include "../include/DPM.hpp"
 
-int main(int argc, const char *argv[])
-{
-
-   DNA a;
-   DNA b;
-
+void getDna(DNA & a, DNA & b){
    // Request user input until valid input is given.
    // DNA object will throw an except if it is constructed with
    // an invalid string
@@ -45,25 +40,37 @@ int main(int argc, const char *argv[])
          cin.ignore(INT_MAX,'\n');
       }
    }
+}
+
+int main(int argc, const char *argv[])
+{
+
+   DNA a;
+   DNA b;
+
+   // get two DNA strings as user input.
+   // this function also deals with validating the
+   // DNA sequences
+   getDna(a, b);
 
    // create the DPM object
-   DPM<int> matrix(a, b);
+   DPM matrix(a, b, 3, 0, 1);
 
    // get iterators from it
-   DPM<int>::Iterator mit = matrix.begin();
-   DPM<int>::Iterator mend= matrix.end();
+   DPM::Iterator mit = matrix.begin();
+   DPM::Iterator mend= matrix.end();
 
-   vector<DPM<int>::Alignment> testVect;
+   vector<DPM::Alignment> testVect;
    //testVect.resize(10);
 
    //copy(mend, mit, back_inserter(testVect));
    copy(mit, mend, back_inserter(testVect));
 
-   vector<DPM<int>::Alignment>::iterator vit = testVect.begin();
-   vector<DPM<int>::Alignment>::iterator vend = testVect.end();
+   vector<DPM::Alignment>::iterator vit = testVect.begin();
+   vector<DPM::Alignment>::iterator vend = testVect.end();
 
-   //mit = DPM<int>::Iteratormatrix.begin();
-   //mend= DPM<int>::Iterator(matrix.end());
+   //mit = DPM::Iteratormatrix.begin();
+   //mend= DPM::Iterator(matrix.end());
 
    // iterate through the results
    while (vit != vend){

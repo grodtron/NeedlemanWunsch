@@ -28,7 +28,7 @@ endif
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, main.o DNA.o)
+OBJS=$(addprefix $(OBJ_DIR)/, main.o DNA.o DPM.o)
 
 executable=nw
 

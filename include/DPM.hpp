@@ -10,17 +10,13 @@ using std::list;
 using std::iterator;
 using std::input_iterator_tag;
 
+class DPM_ImplementationBase;
 
-template <typename T>
 class DPM{
 
-      struct MatrixCell;
-      struct StackCell;
+      DPM_ImplementationBase * matrix;
 
-      struct MatrixCell{
-         T score;
-         unsigned char direction;
-      };
+   public:
 
       struct StackCell{
          size_t i;
@@ -28,27 +24,6 @@ class DPM{
          unsigned char flags;
       };
 
-      // the input strings
-      DNA A;
-      DNA B;
-
-      // the score matrix
-      size_t width;
-      size_t height;
-      MatrixCell ** matrix;
-
-      // initialize the matrix
-      void _init();
-
-      // get alignment from initialized matrix
-      void _traceBack(list<StackCell> & current, char * a, char * b, size_t & index) const;
-
-      T matchScore;
-      T gapScore;
-      T misMatchScore;
-      T similarity(size_t i, size_t j);
-
-   public:
       class  Alignment;
       class  Iterator;
 
@@ -57,68 +32,63 @@ class DPM{
       // TODO - info about match types could be added here to extend to fancier
       // printing modes, such as ANSI or HTML
       class Alignment{
-            friend class DPM<T>::Iterator;
+            friend class DPM::Iterator;
             char * a;
             char * b;
             Alignment(char * a, char * b, size_t len);
          public:
             Alignment();
-            Alignment(const DPM<T>::Alignment & other);
+            Alignment(const DPM::Alignment & other);
            ~Alignment();
-            DPM<T>::Alignment & operator=(const DPM<T>::Alignment & other);
-            bool operator==(const DPM<T>::Alignment & other) const;
+            DPM::Alignment & operator=(const DPM::Alignment & other);
+            bool operator==(const DPM::Alignment & other) const;
             void print();
       };
 
       // an iterator that can be used to get successive alignment objects
       // as the results of the algorithm
       class Iterator : public iterator<input_iterator_tag, Alignment>{
-            friend class DPM<T>;
+            friend class DPM;
             // a reference to the DPM object that this iterator
             // refers to
-            DPM<T> & parent;
-            DPM<T>::Alignment currentAlignment;
+            DPM & parent;
+            DPM::Alignment currentAlignment;
             // a flag that is set when post-increment is used.
             // it indicates that the next time the alignment this
             // object points to is requested,
             // the iterator should increment
             unsigned char flags;
-            Iterator(DPM<T> & parent);
+            Iterator(DPM & parent);
             // these hold the current progress of the algorithm for this iterator
-            list<DPM<T>::StackCell> currentStack;
+            list<DPM::StackCell> currentStack;
             char * a;
             char * b;
             size_t index;
          public:
            ~Iterator();
-            Iterator(const DPM<T>::Iterator & other);
-            bool operator==(const DPM<T>::Iterator & other) const;
-            bool operator!=(const DPM<T>::Iterator & other);
-            //DPM<T>::Alignment   operator*();
-            DPM<T>::Iterator & operator=(const DPM<T>::Iterator & other);
+            Iterator(const DPM::Iterator & other);
+            bool operator==(const DPM::Iterator & other) const;
+            bool operator!=(const DPM::Iterator & other);
+            //DPM::Alignment   operator*();
+            DPM::Iterator & operator=(const DPM::Iterator & other);
             Alignment operator*();
-            DPM<T>::Iterator  & operator++();// {++p;return *this;}
-            DPM<T>::Iterator    operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
+            DPM::Iterator  & operator++();// {++p;return *this;}
+            DPM::Iterator    operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
             static const unsigned char  INCREMENT_BEFORE_ACCESS = 1 << 0;
             static const unsigned char  ITERATION_COMPLETE      = 1 << 0;
       };
 
-      DPM(DNA a, DNA b);
+      DPM(DNA a, DNA b, int matchScore, int gapPenalty, int mismatchPenalty);
+      DPM(DNA a, DNA b, double matchScore, double gapPenalty, double mismatchPenalty);
      ~DPM();
-      void setMatchScore(T val);
-      void setMisMatchScore(T val);
-      void setGapPenalty(T val);
 
       Iterator begin();
       Iterator end();
 
-      // directional flags for matrixCell;
-      static const unsigned char VERTICAL   = 1 << 0;
-      static const unsigned char DIAGONAL   = 1 << 1;
-      static const unsigned char HORIZONTAL = 1 << 2;
 
       // traceback flags
       static const unsigned char VISITED    = 1 << 3;
 };
+
 
 #endif

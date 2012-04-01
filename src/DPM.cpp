@@ -13,30 +13,80 @@ using std::copy;
 
 #include "../include/DPM.hpp"
 
+class DPM_ImplementationBase{
+   public:
+      virtual void _init() = 0;
+      virtual void _traceBack(list<DPM::StackCell> & current, char * a, char * b, size_t & index) const = 0;
+      virtual size_t getWidth() const = 0;
+      virtual size_t getHeight() const = 0;
+      virtual ~DPM_ImplementationBase() { } ;
+};
+
+template <typename T>
+class DPM_Implementation: public DPM_ImplementationBase{
+      struct MatrixCell{
+         T score;
+         unsigned char direction;
+      };
+
+      // the input strings
+      DNA A;
+      DNA B;
+
+      // the score matrix
+      size_t width;
+      size_t height;
+      MatrixCell ** matrix;
+
+
+      T matchScore;
+      T gapPenalty;
+      T mismatchPenalty;
+      T similarity(size_t i, size_t j);
+   public:
+
+      // initialize the matrix
+      virtual void _init();
+
+      // get alignment from initialized matrix
+      virtual void _traceBack(list<DPM::StackCell> & current, char * a, char * b, size_t & index) const;
+
+      virtual size_t getWidth() const;
+      virtual size_t getHeight() const;
+
+      virtual ~DPM_Implementation();
+      DPM_Implementation(DNA a, DNA b, T matchScore, T gapPenalty, T mismatchPenalty);
+
+      // directional flags for matrixCell;
+      static const unsigned char VERTICAL   = 1 << 0;
+      static const unsigned char DIAGONAL   = 1 << 1;
+      static const unsigned char HORIZONTAL = 1 << 2;
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+//                                                                             //
+//                Templated implementation class Definitions                   //
+//                                                                             //
+/////////////////////////////////////////////////////////////////////////////////
+//
 // little util
 // TODO - handle this properly
 template <typename T> T max(T a, T b, T c){
    return (a > b) ? (a > c ? a : c) : (b > c ? b : c);
 }
 
-/////////////////////////////////////////////
-//                                         //
-//                Private                  //
-//                                         //
-/////////////////////////////////////////////
-
 // Initialization
 // This should only ever be called ONCE. There will be memory leaks otherwise
 template <typename T>
-void DPM<T>::_init(){
+void DPM_Implementation<T>::_init(){
 
    // allocate the top level of the matrix
-   matrix = new DPM<T>::MatrixCell*[width];
+   matrix = new DPM_Implementation<T>::MatrixCell*[width];
 
    for(size_t i = 0; i < width; ++i){
 
       // allocate the second level of teh matrix
-      matrix[i] = new DPM<T>::MatrixCell[height];
+      matrix[i] = new DPM_Implementation<T>::MatrixCell[height];
 
       for(size_t j = 0; j < height; ++j){
          if(i == 0 && j == 0){
@@ -49,29 +99,29 @@ void DPM<T>::_init(){
             // there gap length is their position, and their score is
             // the previous score + the gapPenalty for their position
             // they have only one possible direction, which is vertical (up)
-            matrix[0][j].score = matrix[0][j-1].score + gapScore;
+            matrix[0][j].score = matrix[0][j-1].score + gapPenalty;
             matrix[0][j].direction = VERTICAL;
          }else if(j == 0){
             // this is the same initialization as above, except for the cells along
             // the top horizontal edge
-            matrix[i][0].score = matrix[i-1][0].score + gapScore;
+            matrix[i][0].score = matrix[i-1][0].score + gapPenalty;
             matrix[i][0].direction = HORIZONTAL;
          }else{
 
             // get the cells that we are working with
-            DPM<T>::MatrixCell dCell = matrix[i-1][j-1];
-            DPM<T>::MatrixCell hCell = matrix[i-1][j  ];
-            DPM<T>::MatrixCell vCell = matrix[i  ][j-1];
+            DPM_Implementation<T>::MatrixCell dCell = matrix[i-1][j-1];
+            DPM_Implementation<T>::MatrixCell hCell = matrix[i-1][j  ];
+            DPM_Implementation<T>::MatrixCell vCell = matrix[i  ][j-1];
 
             // "this cell". I'm OCD about name lengths being the same
-            DPM<T>::MatrixCell * tCell = &matrix[i][j];
+            DPM_Implementation<T>::MatrixCell * tCell = &matrix[i][j];
 
             // get the possible scores for this cell, keep
             // the max of the three possibilities
             // the offset is for the blank rows along the edges (huh?)
             T dScore = dCell.score + similarity(i - 1, j - 1);
-            T hScore = hCell.score + gapScore;
-            T vScore = vCell.score + gapScore;
+            T hScore = hCell.score + gapPenalty;
+            T vScore = vCell.score + gapPenalty;
 
             tCell->score = max(dScore, vScore, hScore);
 
@@ -96,29 +146,29 @@ void DPM<T>::_init(){
 }
 
 template <typename T>
-void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char * b, size_t & index ) const{
+void DPM_Implementation<T>::_traceBack( list<DPM::StackCell> & currentStack, char * a, char * b, size_t & index ) const{
    while(!currentStack.empty()){
 
-      DPM<T>::StackCell & currentC = currentStack.back();
-      DPM<T>::MatrixCell  currentM = matrix[currentC.i][currentC.j];
-      DPM<T>::StackCell   child;
+      DPM::StackCell & currentC = currentStack.back();
+      DPM_Implementation<T>::MatrixCell  currentM = matrix[currentC.i][currentC.j];
+      DPM::StackCell   child;
 
       if(currentC.flags & DPM::VISITED){
          currentStack.pop_back();
          --index;
       }else{
-         if(currentC.flags == DPM<T>::VERTICAL){
+         if(currentC.flags == DPM_Implementation<T>::VERTICAL){
             a[index] = '-';
             b[index] = B[currentC.j];
             // incrementing should always be done inside these conditionals
             // otherwise we can increment without inserting a character
             // (which we don't want)
             ++index;
-         }else if(currentC.flags == DPM<T>::HORIZONTAL){
+         }else if(currentC.flags == DPM_Implementation<T>::HORIZONTAL){
             a[index] = A[currentC.i];
             b[index] = '-';
             ++index;
-         }else if(currentC.flags == DPM<T>::DIAGONAL){
+         }else if(currentC.flags == DPM_Implementation<T>::DIAGONAL){
             a[index] = A[currentC.i];
             b[index] = B[currentC.j];
             ++index;
@@ -131,26 +181,26 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
          }*/
          currentC.flags |= DPM::VISITED;
 
-         if(currentM.direction & (DPM<T>::VERTICAL|DPM<T>::HORIZONTAL|DPM<T>::DIAGONAL)){
-            if(currentM.direction & DPM<T>::VERTICAL){
-               child = DPM<T>::StackCell();
+         if(currentM.direction & (DPM_Implementation<T>::VERTICAL|DPM_Implementation<T>::HORIZONTAL|DPM_Implementation<T>::DIAGONAL)){
+            if(currentM.direction & DPM_Implementation<T>::VERTICAL){
+               child = DPM::StackCell();
                child.i = currentC.i;
                child.j = currentC.j - 1;
-               child.flags = DPM<T>::VERTICAL;
+               child.flags = DPM_Implementation<T>::VERTICAL;
                currentStack.push_back(child);
             }
-            if(currentM.direction & DPM<T>::HORIZONTAL){
-               child = DPM<T>::StackCell();
+            if(currentM.direction & DPM_Implementation<T>::HORIZONTAL){
+               child = DPM::StackCell();
                child.i = currentC.i - 1;
                child.j = currentC.j;
-               child.flags = DPM<T>::HORIZONTAL;
+               child.flags = DPM_Implementation<T>::HORIZONTAL;
                currentStack.push_back(child);
             }
-            if(currentM.direction & DPM<T>::DIAGONAL){
-               child = DPM<T>::StackCell();
+            if(currentM.direction & DPM_Implementation<T>::DIAGONAL){
+               child = DPM::StackCell();
                child.i = currentC.i - 1;
                child.j = currentC.j - 1;
-               child.flags = DPM<T>::DIAGONAL;
+               child.flags = DPM_Implementation<T>::DIAGONAL;
                currentStack.push_back(child);
             }
          }else{
@@ -167,20 +217,24 @@ void DPM<T>::_traceBack( list<DPM<T>::StackCell> & currentStack, char * a, char 
 }
 
 template <typename T>
-T DPM<T>::similarity(size_t i, size_t j){
-   return A[i] == B[j] ? matchScore : misMatchScore;
+T DPM_Implementation<T>::similarity(size_t i, size_t j){
+   return A[i] == B[j] ? matchScore : mismatchPenalty;
 }
 
-/////////////////////////////////////////////
-//                                         //
-//                Public                   //
-//                                         //
-/////////////////////////////////////////////
+template <typename T>
+size_t DPM_Implementation<T>::getWidth() const{
+   return width;
+}
+
+template <typename T>
+size_t DPM_Implementation<T>::getHeight() const{
+   return height;
+}
 
 // constructor!
 template <typename T>
-DPM<T>::DPM(DNA a, DNA b)
-: A(a), B(b), matrix(NULL), matchScore(3), gapScore(-1), misMatchScore(-1)
+DPM_Implementation<T>::DPM_Implementation(DNA a, DNA b, T matchScore, T gapPenalty, T mismatchPenalty)
+: A(a), B(b), matrix(NULL), matchScore(matchScore), gapPenalty(gapPenalty), mismatchPenalty(mismatchPenalty)
 {
    // an extra row must be allocated otherwise the first character of the sequences will be truncated
    width  = A.size() + 1;
@@ -189,7 +243,7 @@ DPM<T>::DPM(DNA a, DNA b)
 }
 
 template <typename T>
-DPM<T>::~DPM(){
+DPM_Implementation<T>::~DPM_Implementation(){
    for(size_t i = 0; i < width; ++i){
       delete[] matrix[i];
       matrix[i] = NULL;
@@ -197,11 +251,40 @@ DPM<T>::~DPM(){
    delete[] matrix;
 }
 
-template <typename T>
-typename DPM<T>::Iterator DPM<T>::begin(){
+
+/////////////////////////////////////////////
+//                                         //
+//             Constructors                //
+//                                         //
+/////////////////////////////////////////////
+
+DPM::DPM(DNA a, DNA b, int matchScore, int gapPenalty, int mismatchPenalty)
+: matrix(new DPM_Implementation<int>(a,b,matchScore,gapPenalty,mismatchPenalty))
+{
+   matrix->_init();
+}
+
+DPM::DPM(DNA a, DNA b, double matchScore, double gapPenalty, double mismatchPenalty)
+: matrix(new DPM_Implementation<double>(a,b,matchScore,gapPenalty,mismatchPenalty))
+{
+   matrix->_init();
+}
+
+DPM::~DPM(){
+   delete matrix;
+}
+
+/////////////////////////////////////////////
+//                                         //
+//                Public                   //
+//                                         //
+/////////////////////////////////////////////
+
+
+DPM::Iterator DPM::begin(){
    // This function creates a new iterator that will yield
    // all of the possible alignments for the current DPM
-   DPM<T>::Iterator it(*this);
+   DPM::Iterator it(*this);
 
    it.index = 0;
    it.flags = 0;
@@ -210,9 +293,9 @@ typename DPM<T>::Iterator DPM<T>::begin(){
    // the traceback phase of the algorithm. Starting with
    // only the first cell will cause every alignment to be
    // generated
-   it.currentStack.push_back(DPM<T>::StackCell());
-   it.currentStack.back().i = width - 1;
-   it.currentStack.back().j = height - 1;
+   it.currentStack.push_back(DPM::StackCell());
+   it.currentStack.back().i = matrix->getWidth() - 1;
+   it.currentStack.back().j = matrix->getHeight() - 1;
    it.currentStack.back().flags = 0;
 
    ++it;
@@ -220,9 +303,8 @@ typename DPM<T>::Iterator DPM<T>::begin(){
    return it /* by value */;
 }
 
-template <typename T>
-typename DPM<T>::Iterator DPM<T>::end(){
-   DPM<T>::Iterator it(*this);
+DPM::Iterator DPM::end(){
+   DPM::Iterator it(*this);
 
    // an empty stack means that every alignment has been found
    it.index = 0;
@@ -243,55 +325,51 @@ typename DPM<T>::Iterator DPM<T>::end(){
 
 // Iterator constructor - associates the iterator with a DPM object, and initializes it to
 // the right size
-template <typename T>
-DPM<T>::Iterator::Iterator(DPM<T> & parent)
-: parent(parent), currentAlignment(DPM<T>::Alignment()),
+DPM::Iterator::Iterator(DPM & parent)
+: parent(parent), currentAlignment(DPM::Alignment()),
   flags(0), index(0) {
 
-   a = new char[parent.width + parent.height]; 
-   b = new char[parent.width + parent.height]; 
+   a = new char[parent.matrix->getWidth() + parent.matrix->getHeight()]; 
+   b = new char[parent.matrix->getWidth() + parent.matrix->getHeight()]; 
    a[0] = '\0';
    b[0] = '\0';
 }
 
 // copy cosntructor
-template <typename T>
-DPM<T>::Iterator::Iterator(const DPM<T>::Iterator & other)
+DPM::Iterator::Iterator(const DPM::Iterator & other)
 : parent(other.parent),
-  currentAlignment (DPM<T>::Alignment(other.currentAlignment)), flags(other.flags),
-  currentStack(list<DPM<T>::StackCell>(other.currentStack)), index(other.index)
+  currentAlignment (DPM::Alignment(other.currentAlignment)), flags(other.flags),
+  currentStack(list<DPM::StackCell>(other.currentStack)), index(other.index)
 
 {
-   a = new char[parent.width + parent.height]; 
-   b = new char[parent.width + parent.height]; 
+   a = new char[parent.matrix->getWidth() + parent.matrix->getHeight()]; 
+   b = new char[parent.matrix->getWidth() + parent.matrix->getHeight()]; 
    size_t i;
    // NB - iterator holds the string BACKWARDS!!
-   for(i = 0; i < (parent.height + parent.width); ++i){
+   for(i = 0; i < (parent.matrix->getHeight() + parent.matrix->getWidth()); ++i){
       a[i] = other.a[i];
       b[i] = other.b[i];
    }
 }
 
-template <typename T>
-typename DPM<T>::Iterator & DPM<T>::Iterator::operator=(const DPM<T>::Iterator & other){
+DPM::Iterator & DPM::Iterator::operator=(const DPM::Iterator & other){
    parent = other.parent;
    flags = other.flags;
    index = other.index;
-   currentAlignment = DPM<T>::Alignment(other.currentAlignment);
-   currentStack = list<DPM<T>::StackCell>(other.currentStack);
-   a = new char[parent.width + parent.height]; 
-   b = new char[parent.width + parent.height]; 
+   currentAlignment = DPM::Alignment(other.currentAlignment);
+   currentStack = list<DPM::StackCell>(other.currentStack);
+   a = new char[parent.matrix->getWidth() + parent.matrix->getHeight()]; 
+   b = new char[parent.matrix->getWidth() + parent.matrix->getHeight()]; 
    size_t i;
    // NB - iterator holds the string BACKWARDS!!
-   for(i = 0; i < (parent.height + parent.width); ++i){
+   for(i = 0; i < (parent.matrix->getHeight() + parent.matrix->getWidth()); ++i){
       a[i] = other.a[i];
       b[i] = other.b[i];
    }
    return *this;
 }
 
-template <typename T>
-DPM<T>::Iterator::~Iterator(){
+DPM::Iterator::~Iterator(){
    if (a) delete [] a;
    if (b) delete [] b;
    a = NULL;
@@ -301,60 +379,51 @@ DPM<T>::Iterator::~Iterator(){
 // first check flags. In most cases we're checking an iterator against end(), in which case the flags
 // will differentiate them. If not, then we'll have to do a full string comparison between their alignment
 // objects, which is somewhat expensive
-template <typename T>
-bool DPM<T>::Iterator::operator==(const DPM<T>::Iterator & other) const{
+bool DPM::Iterator::operator==(const DPM::Iterator & other) const{
    return (flags == other.flags && currentAlignment == other.currentAlignment);
 }
 
-template <typename T>
-bool DPM<T>::Iterator::operator!=(const DPM<T>::Iterator & other){
+bool DPM::Iterator::operator!=(const DPM::Iterator & other){
    return !operator==(other);
 }
 
 // TODO - verify that post/pre incrementing works as expected
 // de-reference
-template <typename T>
-typename DPM<T>::Alignment DPM<T>::Iterator::operator* (){
+DPM::Alignment DPM::Iterator::operator* (){
    return currentAlignment;
 }
 
-
 // for reference this is how post/pre-increment is handled
 //
-//DPM<T>::Iterator & operator++();   {++p;return *this;}
-//DPM<T>::Iterator   operator++(int) {myiterator tmp(*this); operator++(); return tmp;}
-
+//DPM::Iterator & operator++();   {++p;return *this;}
+//DPM::Iterator   operator++(int) {myiterator tmp(*this); operator++(); return tmp;}
 
 // pre-increment
-template <typename T>
-typename DPM<T>::Iterator & DPM<T>::Iterator::operator++ (){
+DPM::Iterator & DPM::Iterator::operator++ (){
    // get next alignment
-   parent._traceBack(currentStack, a, b, index);
+   parent.matrix->_traceBack(currentStack, a, b, index);
 
    // load it into an Alignment object
-   currentAlignment = DPM<T>::Alignment(a, b, index);
+   currentAlignment = DPM::Alignment(a, b, index);
 
    // check to see if we're at the end of the iteration (past the last alignment)
    // set flags if we are
-   if(a[0] == '\0'){ flags = DPM<T>::Iterator::ITERATION_COMPLETE; }
+   if(a[0] == '\0'){ flags = DPM::Iterator::ITERATION_COMPLETE; }
 
    return *this;
 }
 
 // post-increment
 // (return a temporary iterator by value)
-template <typename T>
-typename DPM<T>::Iterator  DPM<T>::Iterator::operator++ (int){
+DPM::Iterator  DPM::Iterator::operator++ (int){
    Iterator tmp(*this);
    operator++();
    return tmp;
 }
 
-template <typename T>
-DPM<T>::Alignment::Alignment() : a(NULL), b(NULL) { }
+DPM::Alignment::Alignment() : a(NULL), b(NULL) { }
 
-template <typename T>
-DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
+DPM::Alignment::Alignment(const DPM::Alignment & other) {
    if(other.a){
       size_t len;
       for(len = 0; other.a[len] != '\0'; ++len);
@@ -374,8 +443,7 @@ DPM<T>::Alignment::Alignment(const DPM<T>::Alignment & other) {
    }
 }
 
-template <typename T>
-bool DPM<T>::Alignment::operator==(const DPM<T>::Alignment & other) const{
+bool DPM::Alignment::operator==(const DPM::Alignment & other) const{
 
    // only checking a, because b should be the same, if it's not, then we have bigger
    // problems
@@ -397,8 +465,7 @@ bool DPM<T>::Alignment::operator==(const DPM<T>::Alignment & other) const{
    return false;
 }
 
-template <typename T>
-typename DPM<T>::Alignment & DPM<T>::Alignment::operator=(const DPM<T>::Alignment & other) {
+DPM::Alignment & DPM::Alignment::operator=(const DPM::Alignment & other) {
 
    if (a) { delete[] a; }
    if (b) { delete[] b; }
@@ -427,14 +494,12 @@ typename DPM<T>::Alignment & DPM<T>::Alignment::operator=(const DPM<T>::Alignmen
    return *this /* by reference */;
 }
 
-template <typename T>
-DPM<T>::Alignment::~Alignment(){
+DPM::Alignment::~Alignment(){
    if (a) delete[] a;
    if (b) delete[] b;
 }
 
-template <typename T>
-DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
+DPM::Alignment::Alignment(char * a, char * b, size_t len){
    if(len){
       this->a = new char[len + 1];
       this->b = new char[len + 1];
@@ -457,7 +522,6 @@ DPM<T>::Alignment::Alignment(char * a, char * b, size_t len){
 
 // TODO - fancier printing methods (ANSI, maybe HTML)
 // Also, pass an std::ostream for more flexibility
-template <typename T>
-void DPM<T>::Alignment::print(){
+void DPM::Alignment::print(){
    cout << a << endl << b << endl;
 }
