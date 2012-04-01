@@ -42,6 +42,50 @@ void getDna(DNA & a, DNA & b){
    }
 }
 
+const char DOUBLE = 1 << 0;
+const char INT    = 1 << 1;
+
+union multi_t{
+   int    asInt;
+   double asDouble;
+};
+
+void getParameter(const char * message, multi_t & val, char & valtype){
+   cout << message;
+   cin  >> val.asDouble;
+
+   if(val.asDouble == (int)val.asDouble){
+      val.asInt = (int)val.asDouble;
+      valtype = INT;
+   }else{
+      valtype = DOUBLE;
+   }
+}
+
+void getScoringParameters(char & type, multi_t & match, multi_t & gap, multi_t & mismatch){
+
+   char match_type;
+   char gap_type;
+   char mismatch_type;
+
+   // TODO - validate signs
+   getParameter("Enter match score: ", match, match_type);
+   getParameter("Enter gap penalty (as a positive value): ", gap, gap_type);
+   getParameter("Enter mismatch penalty (as a positive value): ", mismatch, mismatch_type);
+
+   // if any of the parameters were given as floats, then they all
+   // should be converted to floats. Otherwise they are all already ints
+   if( (match_type | gap_type | mismatch_type) & DOUBLE){
+      match.asDouble = match_type ? match.asDouble : (double)match.asInt;
+      gap.asDouble = gap_type ? gap.asDouble : (double)gap.asInt;
+      mismatch.asDouble = mismatch_type ? mismatch.asDouble : (double)mismatch.asInt;
+      type = DOUBLE;
+   }else{
+      type = INT;
+   }
+
+}
+
 int main(int argc, const char *argv[])
 {
 
@@ -53,12 +97,24 @@ int main(int argc, const char *argv[])
    // DNA sequences
    getDna(a, b);
 
+   char type;
+   multi_t match, gap, mismatch;
+
+   getScoringParameters(type, match, gap, mismatch);
+
+   DPM * matrix;
    // create the DPM object
-   DPM matrix(a, b, 3, 0, 1);
+   if(type == DOUBLE){
+      cout << "Using double-precision floating point numbers internally" << endl;
+      matrix = new DPM(a, b, match.asDouble, gap.asDouble, mismatch.asDouble);
+   }else{
+      cout << "Using integer numbers internally" << endl;
+      matrix = new DPM(a, b, match.asInt, gap.asInt, mismatch.asInt);
+   }
 
    // get iterators from it
-   DPM::Iterator mit = matrix.begin();
-   DPM::Iterator mend= matrix.end();
+   DPM::Iterator mit = matrix->begin();
+   DPM::Iterator mend= matrix->end();
 
    vector<DPM::Alignment> testVect;
    //testVect.resize(10);
@@ -80,6 +136,8 @@ int main(int argc, const char *argv[])
    }
 
    cout << endl << endl << "Original DNA was:" << endl << a << endl << b << endl;
+
+   delete matrix;
 
    return 0;
 }
