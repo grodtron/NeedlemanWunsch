@@ -11,6 +11,8 @@ using std::string;
 #include <algorithm>
 using std::copy;
 
+#include <cassert>
+
 #include "../include/DPM.hpp"
 
 class DPM_ImplementationBase{
@@ -76,11 +78,14 @@ template <typename T> T max(T a, T b, T c){
 }
 
 // Initialization
-// This should only ever be called ONCE. There will be memory leaks otherwise
 template <typename T>
 void DPM_Implementation<T>::_init(){
 
    // allocate the top level of the matrix
+   // if this assertion fails, then there is a problem, and we will have memory leaks
+   // (this function should be called exactly once for each DPM_Implementation object)
+   assert(matrix == NULL);
+
    matrix = new DPM_Implementation<T>::MatrixCell*[width];
 
    for(size_t i = 0; i < width; ++i){
@@ -260,15 +265,11 @@ DPM_Implementation<T>::~DPM_Implementation(){
 
 DPM::DPM(DNA a, DNA b, int matchScore, int gapPenalty, int mismatchPenalty)
 : matrix(new DPM_Implementation<int>(a,b,matchScore,gapPenalty,mismatchPenalty))
-{
-   matrix->_init();
-}
+{ }
 
 DPM::DPM(DNA a, DNA b, double matchScore, double gapPenalty, double mismatchPenalty)
 : matrix(new DPM_Implementation<double>(a,b,matchScore,gapPenalty,mismatchPenalty))
-{
-   matrix->_init();
-}
+{ }
 
 DPM::~DPM(){
    delete matrix;
