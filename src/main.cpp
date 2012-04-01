@@ -86,15 +86,8 @@ void getScoringParameters(char & type, multi_t & match, multi_t & gap, multi_t &
 
 }
 
-int main(int argc, const char *argv[])
-{
+void loopA(DNA & a, DNA & b, DPM* & matrix){
 
-   DNA a;
-   DNA b;
-
-   // get two DNA strings as user input.
-   // this function also deals with validating the
-   // DNA sequences
    getDna(a, b);
 
    char type;
@@ -102,7 +95,6 @@ int main(int argc, const char *argv[])
 
    getScoringParameters(type, match, gap, mismatch);
 
-   DPM * matrix;
    // create the DPM object
    if(type == DOUBLE){
       cout << "Using double-precision floating point numbers internally" << endl;
@@ -112,6 +104,84 @@ int main(int argc, const char *argv[])
       matrix = new DPM(a, b, match.asInt, gap.asInt, mismatch.asInt);
    }
 
+}
+
+int main(int argc, const char *argv[])
+{
+
+   DNA a;
+   DNA b;
+   DPM * matrix;
+
+
+
+   const char BREAK_1 = 1 << 0;
+   const char BREAK_2 = 1 << 1;
+
+   char loop_flags = 0;
+
+   while(!(loop_flags & BREAK_1)){
+      loop_flags = 0;
+      loopA(a, b, matrix);
+
+      while(!(loop_flags & BREAK_2)){
+         int option;
+
+         cout << "Choose an option:" << endl
+              << "   1) print both sequences" << endl
+              << "   2) print initialized matrix" << endl
+              << "   3) result of the Needleman-Wunsch (print entire matrix)" << endl
+              << "   4) print one optimal alignment" << endl
+              << "   5) print all optimal alignments" << endl
+              << "   6) enter two new sequences" << endl
+              << "   7) quit" << endl;
+
+         cin >> option;
+
+         switch(option){
+            // print sequences
+            case 1:
+               cout << a << endl << b << endl;
+               break;
+            case 2:
+               //cout << "TODO - print matrix" << endl;
+               matrix->print();
+               break;
+            case 3:
+               cout << "TODO - print matrix" << endl;
+               // TODO - print matrix (how is this different from 2)?)
+               break;
+            // print first
+            case 4:
+               {
+                  DPM::Iterator m_it = matrix->begin();
+                  (*m_it).print();
+               }
+               break;
+            // print all
+            case 5:
+               {
+                  DPM::Iterator m_it = matrix->begin();
+                  DPM::Iterator m_end = matrix->end();
+                  while(m_it != m_end){
+                     (*m_it).print();
+                     ++m_it;
+                     cout << endl;
+                  }
+               }
+               break;
+            // enter new sequence
+            case 6:
+               loop_flags = BREAK_2;
+               break;
+            // quit
+            case 7:
+               loop_flags = BREAK_1 | BREAK_2;
+               break;
+         }
+      }
+   }
+/*
    // get iterators from it
    DPM::Iterator mit = matrix->begin();
    DPM::Iterator mend= matrix->end();
@@ -134,8 +204,7 @@ int main(int argc, const char *argv[])
       cout << endl;
       ++vit;
    }
-
-   cout << endl << endl << "Original DNA was:" << endl << a << endl << b << endl;
+*/
 
    delete matrix;
 

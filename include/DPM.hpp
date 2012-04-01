@@ -66,6 +66,7 @@ class DPM{
             size_t index;
          public:
            ~Iterator();
+            Iterator();
             Iterator(const DPM::Iterator & other);
             bool operator==(const DPM::Iterator & other) const;
             bool operator!=(const DPM::Iterator & other);
@@ -74,7 +75,6 @@ class DPM{
             Alignment operator*();
             DPM::Iterator  & operator++();// {++p;return *this;}
             DPM::Iterator    operator++(int);// {myiterator tmp(*this); operator++(); return tmp;}
-            static const unsigned char  INCREMENT_BEFORE_ACCESS = 1 << 0;
             static const unsigned char  ITERATION_COMPLETE      = 1 << 0;
       };
 
@@ -85,6 +85,7 @@ class DPM{
       Iterator begin();
       Iterator end();
 
+      void print() const;
 
       // traceback flags
       static const unsigned char VISITED    = 1 << 3;

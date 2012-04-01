@@ -4,6 +4,8 @@ using std::endl;
 
 #include <iomanip>
 using std::setw;
+using std::setprecision;
+using std::fixed;
 
 #include <string>
 using std::string;
@@ -21,6 +23,7 @@ class DPM_ImplementationBase{
       virtual void _traceBack(list<DPM::StackCell> & current, char * a, char * b, size_t & index) const = 0;
       virtual size_t getWidth() const = 0;
       virtual size_t getHeight() const = 0;
+      virtual void print() const = 0;
       virtual ~DPM_ImplementationBase() { } ;
 };
 
@@ -55,6 +58,8 @@ class DPM_Implementation: public DPM_ImplementationBase{
 
       virtual size_t getWidth() const;
       virtual size_t getHeight() const;
+
+      virtual void print() const;
 
       virtual ~DPM_Implementation();
       DPM_Implementation(DNA a, DNA b, T matchScore, T gapPenalty, T mismatchPenalty);
@@ -256,6 +261,45 @@ DPM_Implementation<T>::~DPM_Implementation(){
    delete[] matrix;
 }
 
+template <> void DPM_Implementation<int>::print() const{
+   cout << setw(8) << ' ';
+   for(size_t i = 0; i < height-1; ++i){
+      cout << setw(4) << B[i]; 
+   }
+   cout << endl;
+   for(size_t i = 0; i < width; ++i){
+      if(i > 0){
+         cout << setw(4) << A[i-1];
+      }else{
+         cout << setw(4) << ' ';
+      }
+      for(size_t j = 0; j < height; ++j){
+         cout << setw(4) << matrix[i][j].score;
+      }
+      cout << endl;
+   }
+}
+
+template <> void DPM_Implementation<double>::print() const{
+   cout << fixed;
+   cout << setw(16) << ' ';
+   for(size_t i = 0; i < height-1; ++i){
+      cout << setw(8) << B[i]; 
+   }
+   cout << endl << endl;
+   for(size_t i = 0; i < width; ++i){
+      if(i > 0){
+         cout << setw(8) << A[i-1];
+      }else{
+         cout << setw(8) << ' ';
+      }
+      for(size_t j = 0; j < height; ++j){
+         cout << setprecision(2) << setw(8) << matrix[i][j].score;
+      }
+      cout << endl << endl;
+   }
+}
+
 
 /////////////////////////////////////////////
 //                                         //
@@ -281,6 +325,9 @@ DPM::~DPM(){
 //                                         //
 /////////////////////////////////////////////
 
+void DPM::print() const{
+   matrix->print();
+}
 
 DPM::Iterator DPM::begin(){
    // This function creates a new iterator that will yield
