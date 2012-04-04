@@ -7,3 +7,5 @@ src/qwertyDistance.cpp
 *.txt
 *.html
 *.pyc
+*~
+!report.txt

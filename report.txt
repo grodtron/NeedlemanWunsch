@@ -1,0 +1,87 @@
+Code Details
+============
+
+DNA Object
+----------
+
+The DNA object is relatively simple. Its only responsibility is to validate
+and store a sequence of characters representing a piece of DNA. Inputting
+data into the DNA object is done either when the object is constructed, by
+passing a c-string representing the sequence to the constructor, or is done
+using an overloaded operator>> function reading from cin (or any other istream
+ object).
+
+Validation of the data is done as soon as it is received. The validation
+process is very simple - each character is checked, and if any is not a member
+of the set [ACGT] then the sequence is invalid, and an exception is thrown that
+contains information about where in the sequence the invalid character appeared.
+
+Data from the DNA object is readable through the object's operator[] function.
+
+DPM Object
+----------
+
+# Accomodating different data types
+
+The DPM object is considerably more complex than the DNA object. Because the
+data type that is used internally by the DPM object does not have any effect
+on the public interface for getting the results of the algorithm, the
+implementation details of the templated class were hidden as much as possible
+from the end user of the DPM object. This was accomplished by wrapping all of
+the business logic of the Needleman-Wunsch object in a seperate template class,
+DPM_Implementation, which inherits from an abstract base class DPM_ImplementationBase. The actual DPM object only keeps track of a pointer of
+the DPM_ImplementationBase type that references an instance of the templated
+DPM_Implementation class. By using one constructor that takes int parameters, and another that takes doubles, the user of the class can pass whatever
+datatype they like, and not have to deal with variables of multiple templated types.
+
+# Traceback procedure
+
+To optimize the traceback procedure, data about possible paths through
+the matrix is stored during the filling of the matrix. Each cell of the matrix
+is represent by a simple struct that contains the score for that position
+in the matrix, and a set of flags indicating the cells which the current cell's
+score could have originated from. This does not increase the space or time
+complexity of the filling stage. The amount of space used increases from
+(4 bytes * m * n) to (5 bytes * m * n), where m and n are the lengths of the
+two sequences. Similarly, calculating the flags for each cell only adds a
+constant amount of time to the calculations done for each cell, and the actual
+time complexity does not change.
+
+Since the direction information is already stored within the matrix, the
+traceback procedure becomes a simple traversal of the acyclic directed
+graph made up of the flags stored in the matrix. This traversal could easily
+be done using a recursive function, but instead an stack-based implementation
+was chosen. The reason for this was to make it possible to retrieve only a
+limited number of possible alignments, to retrieve some, and then retrieve
+more later on, or to retrieve all alignments using a lazy evaluation strategy,
+which can provide a lot of memory savings.
+
+To make the retrieval of alignments as convenient as possible, an STL compatible iterator was created that makes it possible to easily retrieve results one at a time. The iterator keeps a stack of nodes, which act as a
+bookmark for the current position within the traceback procedure. Each time
+a new alignment is requested, the iterator calls the _traceback() function of
+its parent DPM object, passing its current stack. The stack is updated, and
+the next alignment is returned to the iterator, overwriting the alignment
+that it stored previously.
+
+In this program, the main advantage of this approach to calculating all
+possible alignments is reduced space complexity. Rather than calculating all
+alignments, storing them, and then looping over all of them, only one alignment
+object is ever created at a time, allowing them to be looped over in constant
+space. This is useful, because in many cases there are tens or hundreds of
+thousands of possible alignments.
+
+Time and Space Complexity
+-------------------------
+
+traceback - since the algorithm is a simple depth-first search, the time
+complexity is O(|E| + |V|). The number of vertices is (m + 1)(n + 1), and the number of edges is 3mn + m + n. Therefore the time complexity is O(mn).
+
+Space complexity is at most 3(m + n) = O(m+n).
+
+Initializing the matrix is O(mn)
+
+Bugs
+----
+
+There are no known bugs in the program. Additionally, the program
+has been tested using valgrind, an there are no memory leaks present.
