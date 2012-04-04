@@ -93,19 +93,20 @@ void DPM_Implementation<T>::_init(){
    // (this function should be called exactly once for each DPM_Implementation object)
    assert(matrix == NULL);
 
-   matrix = new DPM_Implementation<T>::MatrixCell*[width];
+   matrix = new typename DPM_Implementation<T>::MatrixCell*[width];
 
    for(size_t i = 0; i < width; ++i){
 
       // allocate the second level of teh matrix
-      matrix[i] = new DPM_Implementation<T>::MatrixCell[height];
+      matrix[i] = new typename DPM_Implementation<T>::MatrixCell[height];
 
       for(size_t j = 0; j < height; ++j){
          if(i == 0 && j == 0){
             // gap lengths, score and directions all zero
             // this is the cell that is the endpoint of the
             // matrix (top left corner)
-            matrix[i][j] = {0,0};
+            matrix[i][j].score     = 0;
+            matrix[i][j].direction = 0;
          }else if(i == 0){
             // these are the cells along the left-hand vertical edge
             // there gap length is their position, and their score is
@@ -121,12 +122,12 @@ void DPM_Implementation<T>::_init(){
          }else{
 
             // get the cells that we are working with
-            DPM_Implementation<T>::MatrixCell dCell = matrix[i-1][j-1];
-            DPM_Implementation<T>::MatrixCell hCell = matrix[i-1][j  ];
-            DPM_Implementation<T>::MatrixCell vCell = matrix[i  ][j-1];
+            typename DPM_Implementation<T>::MatrixCell dCell = matrix[i-1][j-1];
+            typename DPM_Implementation<T>::MatrixCell hCell = matrix[i-1][j  ];
+            typename DPM_Implementation<T>::MatrixCell vCell = matrix[i  ][j-1];
 
             // "this cell". I'm OCD about name lengths being the same
-            DPM_Implementation<T>::MatrixCell * tCell = &matrix[i][j];
+            typename DPM_Implementation<T>::MatrixCell * tCell = &matrix[i][j];
 
             // get the possible scores for this cell, keep
             // the max of the three possibilities
@@ -162,7 +163,7 @@ void DPM_Implementation<T>::_traceBack( list<DPM::StackCell> & currentStack, cha
    while(!currentStack.empty()){
 
       DPM::StackCell & currentC = currentStack.back();
-      DPM_Implementation<T>::MatrixCell  currentM = matrix[currentC.i][currentC.j];
+      typename DPM_Implementation<T>::MatrixCell  currentM = matrix[currentC.i][currentC.j];
       DPM::StackCell   child;
 
       if(currentC.flags & DPM::VISITED){
