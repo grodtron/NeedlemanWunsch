@@ -86,6 +86,7 @@ class DPM{
       Iterator end();
 
       void print() const;
+      void printTraceback() const;
 
       // traceback flags
       static const unsigned char VISITED    = 1 << 3;

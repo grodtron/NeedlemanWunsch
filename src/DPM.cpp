@@ -24,6 +24,7 @@ class DPM_ImplementationBase{
       virtual size_t getWidth() const = 0;
       virtual size_t getHeight() const = 0;
       virtual void print() const = 0;
+      virtual void printTraceback() const = 0;
       virtual ~DPM_ImplementationBase() { } ;
 };
 
@@ -60,6 +61,7 @@ class DPM_Implementation: public DPM_ImplementationBase{
       virtual size_t getHeight() const;
 
       virtual void print() const;
+      virtual void printTraceback() const;
 
       virtual ~DPM_Implementation();
       DPM_Implementation(DNA a, DNA b, T matchScore, T gapPenalty, T mismatchPenalty);
@@ -261,6 +263,31 @@ DPM_Implementation<T>::~DPM_Implementation(){
    delete[] matrix;
 }
 
+template <typename T> void DPM_Implementation<T>::printTraceback() const{
+   cout << setw(6) << ' ';
+   for(size_t i = 0; i < height-1; ++i){
+      cout << setw(6) << B[i]; 
+   }
+
+   cout << endl;
+   for(size_t i = 0; i < width; ++i){
+
+      if(i > 0){
+         cout  << "  " << A[i-1];
+      }else{
+         cout << setw(3) << ' ';
+      }
+
+      for(size_t j = 0; j < height; ++j){
+         cout << setw(3) << ' '
+              << (matrix[i][j].direction & DPM_Implementation<T>::VERTICAL   ? '_'  : ' ')
+              << (matrix[i][j].direction & DPM_Implementation<T>::DIAGONAL   ? '\\' : ' ') 
+              << (matrix[i][j].direction & DPM_Implementation<T>::HORIZONTAL ? '|'  : ' '); 
+      }
+      cout << endl << endl;
+   }
+}
+
 template <> void DPM_Implementation<int>::print() const{
    cout << setw(8) << ' ';
    for(size_t i = 0; i < height-1; ++i){
@@ -327,6 +354,10 @@ DPM::~DPM(){
 
 void DPM::print() const{
    matrix->print();
+}
+
+void DPM::printTraceback() const{
+   matrix->printTraceback();
 }
 
 DPM::Iterator DPM::begin(){

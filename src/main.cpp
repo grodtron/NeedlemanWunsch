@@ -148,8 +148,8 @@ int main(int argc, const char *argv[])
                matrix->print();
                break;
             case 3:
-               cout << "TODO - print matrix" << endl;
-               // TODO - print matrix (how is this different from 2)?)
+               //cout << "TODO - print matrix" << endl;
+               matrix->printTraceback();
                break;
             // print first
             case 4:
