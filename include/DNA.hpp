@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2012 Gordon Bailey
+ */
 #ifndef DNA_H_
 #define DNA_H_
 

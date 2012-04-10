@@ -28,13 +28,18 @@ endif
 OBJ_DIR=.objects
 SRC_DIR=src
 
-OBJS=$(addprefix $(OBJ_DIR)/, main.o DNA.o DPM.o)
+OBJS=$(addprefix $(OBJ_DIR)/, Alignment.o DNA.o DPM.o)
 
 executable=nw
 
-.PHONY: clean all
+.PHONY: clean all test
 
 all: $(executable)
+
+test: tn
+
+tn: .objects/DNA.o .objects/DPM.o .objects/test.o
+	$(CPP) $^ $(LD_FLAGS) $(CPP_FLAGS) -o $@
 
 # $^ = RHS (dependencies)
 # this has to come BEFORE the ld flags, otherwise you get a million errors

@@ -1,0 +1,208 @@
+%        File: report.tex
+%     Created: Tue Apr 10 01:00 PM 2012 E
+% Last Change: Tue Apr 10 01:00 PM 2012 E
+%
+\documentclass[a4paper]{report}
+\begin{document}
+
+% the '*'s suppress auto-numbering of sections
+\section*{Code Details}
+\subsection*{DNA Object}
+
+The DNA object is relatively simple. Its only responsibility is to validate
+and store a sequence of characters representing a piece of DNA. Inputting
+data into the DNA object is done either when the object is constructed, by
+passing a c-string representing the sequence to the constructor, or is done
+using an overloaded \verb=operator>>= function reading from \verb=cin= (or any other \verb=istream=
+ object).
+
+Validation of the data is done as soon as it is received. The validation
+process is simple - each character is checked, and if any is not a member
+of the set $\{\verb=A=,\verb=C=,\verb=G=,\verb=T=\}$ then the sequence is
+invalid, and an exception is thrown that contains information about where in the
+sequence the invalid character appeared.
+
+Data from the DNA object is readable through the object's \verb=operator[]= function.
+
+\subsection*{DPM Object}
+
+\subsubsection*{Accomodating Different Data Types}
+
+The DPM object is considerably more complex than the DNA object. Because the
+data type that is used internally by the DPM object does not have any affect
+on the public interface for getting the results of the algorithm, the
+implementation details of the templated class were hidden as much as possible
+from the end user of the DPM object. This was done by wrapping all of
+the business logic of the Needleman-Wunsch algorithm in a separate template class,
+\verb=DPM_Implementation=, that inherits from an abstract base class \verb=DPM_ImplementationBase=.
+The actual DPM object only keeps track of a \\* \verb=DPM_ImplementationBase= pointer
+that references an instance of the templated \verb=DPM_Implementation= class. By
+using one constructor that takes \verb=int= parameters, and another that takes \verb=double=s,
+the user of the class may pass whatever datatype they like, and not have to deal
+with variables of multiple templated types.
+
+An additional advantage of this approach is that it makes it possible to compile
+the templated implementation of the Needleman-Wunsch algorithm separately from the
+code that actually uses it, removing the necessity to \verb=#include= the
+implementation file, and decreasing the physical dependency between the DPM class and
+programs that use it.
+
+\subsubsection*{Traceback Procedure}
+
+To optimize the traceback procedure, data about possible paths through
+the matrix is stored during the filling of the matrix. Each cell of the matrix
+is represented by a simple \verb=struct= that contains the score for that position
+in the matrix, and a set of flags indicating the cells that the current cell's
+score may have originated from. This does not increase the space or time
+complexity of the filling stage. The amount of space used increases from
+$4mn$ bytes to $5mn$ bytes, where $m$ and $n$ are the lengths of the
+two sequences. Similarly, calculating the flags for each cell only adds a
+constant amount of time to the calculations done for each cell, and the actual
+time complexity does not change.
+
+Since the direction information is already stored within the matrix, the
+traceback procedure becomes a simple traversal of the acyclic directed
+graph made up of the flags stored in the matrix. This traversal could easily
+be done using a recursive function, but instead a stack-based implementation
+was chosen. The reason for this was to make it possible to retrieve only a
+limited number of possible alignments, to retrieve some, and then retrieve
+more later on, or to retrieve all alignments using a lazy evaluation strategy,
+which can provide significant memory savings.
+
+To make the retrieval of alignments as convenient as possible, an STL compatible
+iterator was created that makes it possible to easily retrieve results one at a
+time. The iterator keeps a stack of nodes, that act as a bookmark for the current
+position within the traceback procedure. Each time a new alignment is requested,
+the iterator calls the \verb=_traceback()= function of its parent DPM object, passing its
+current stack. The stack is updated, and the next alignment is returned to the
+iterator, overwriting the alignment that it stored previously.
+
+In this program, the main advantage of this approach to calculating all
+possible alignments is reduced space complexity. Rather than calculating all
+alignments, storing them, and then looping over all of them, only one alignment
+object is ever created at a time, allowing them to be looped over in constant
+space relative to the number of optimal alignments. This is useful, because often
+there may be tens or hundreds of thousands of possible alignments.
+
+\subsection*{Time and Space Complexity}
+
+\subsubsection{Matrix Initialization and Filling}
+
+The time and space complexity of the matrix filling and initialization are both
+quadratic. A constant amount of time and space is needed to calculate the scores and
+directional flags at each cell in the matrix, and there are $(m + 1)(n + 1)$ cells
+in the matrix in total, giving time and space complexities of $O(mn)$.
+
+\subsubsection*{Traceback Procedure}
+
+The time complexity of the traceback procedure is different for retrieving
+a single optimal alignment versus all possible alignments. For a single optimal
+alignment, the maximum possible length is $m + n$, which would result from a situation
+where there are no matches and gaps are inserted at all positions, for example:
+
+\begin{verbatim}
+AAAAAAAAA-------
+---------GGGGGGG
+\end{verbatim}
+
+In this case, the time complexity is $O(m + n)$. The best case is that the length of
+the optimal alignment is the same as the length of the longest sequence to be aligned,
+for example:
+
+\begin{verbatim}
+ATCGTAGCTCAGTACGTGACTG
+AT--TAGC-CAG-----GA-TG
+\end{verbatim}
+
+In this case, the time complexity is $O(max(m,n))$. In both cases, the time complexity is
+roughly linear in $m$ and $n$.
+
+The time complexity for finding all optimal alignments is obviously greater than for
+finding one optimal alignment. In this case the directed acyclic graph which is implicitly
+stored in the filled matrix (represented by the directional flags at each cell) is used,
+which makes finding all optimal alignments a simple depth-first traversal of the graph.
+The worst-case time complexity is therefore $O(E + V)$ where $E$ is the number of edges
+in the graph and $V$ is the number of vertices. In the worst case, every cell in the matrix
+is a vertex, and every cell (other than those on the sides of the matrix) has three edges
+leaving it (with the $m + n$ edge cells having one edge each). This gives a total worst-case
+time complexity of $O((m + 1)(n + 1) + 3mn + m + n) = O(mn)$.
+
+The space complexity of finding a single optimal alignment, or of finding all optimal
+alignments is the same -- $O(m + n)$. This is the case for the same reason that the time
+complexity of finding a single optimal alignment is $O(m + n)$. For each character in the
+optimal alignment, one character must be appended to each of the strings in the optimal alignment,
+and between one and three cells must be pushed onto the stack. This gives a total maximum
+space usage of $(m + n)(2 \verb=sizeof(char)= + 3 \verb=sizeof(stackCell)=)$, which corresponds to a space
+complexity of $O(m + n)$. The space complexity does not increase when all optimal alignments are
+retrieved, because only one alignment is stored at a time.
+
+
+
+\subsection*{Bugs}
+
+There are no known bugs in the program. Additionally, the program
+has been tested using \verb=valgrind=, and there are no memory leaks present.
+
+\section*{Observations}
+
+For the most part, variation of the match score, gap penalty and mismatch penalty provide
+predictable results. The higher the match score is set, the more matches are valued in alignments, at
+the expense of adding more gaps or mismatches. Consider the following alignment of the sequences
+\verb=GAGAGTTT= and \verb=CCCGAGAG=. With a match score of 1, a gap penalty of 1 and a mismatch penalty of
+0, the first optimal alignment is:
+
+\begin{verbatim}
+-GAGAGTTT
+CCCGAG-AG
+\end{verbatim}
+
+In the above alignment, not all possible matches are made, because the cost of the addition of four gaps (-4) is
+greater than the reward from adding two more matches (+2). If the match score is increased to 2, then both of the
+following alignments are considered equally optimal:
+
+\begin{verbatim}
+-GAGAGTTT
+CCCGAG-AG
+
+---GAGAGTTT
+CCCGAGAG---
+\end{verbatim}
+
+Finally, by increasing the match score to 3, the second alignment, which contains more matches, becomes better
+than the first. In general, by making the match score sufficiently high, the optimal alignments will always
+contain the maximum possible number of matches.
+
+Similarly, by making the mismatch score sufficiently high, and the gap penalty sufficiently low,
+it is possible to obtain optimal alignments that contain all possible matches, and no mismatches.
+This type of alignment is actually a solution to the longest-common-subsequence problem. For example,
+in the following alignment, the longest common subsequence between the two sequences \verb=GCCTACAATCGTACGCA=
+and \verb=CTATCTACCTGTACTTG= is found by simply ignoring all gaps in the alignment.
+
+\begin{verbatim}
+GC---CTA-CAATCGTAC--GCA
+-CTATCTACC--T-GTACTTG--
+ C   CTA C  T GTAC  G
+\end{verbatim}
+
+Which gives a longest-common-subsequence of \verb=CCTACTGTACG=. There are also other
+possible longest-common-subsequences, such as \verb=CTACACGTACG= which is obtained
+from the alignment:
+
+\begin{verbatim}
+GCCTA-CA-AT-C-GTAC--GCA
+-C-TATC-TA-CCTGTACTTG--
+ C TA C  A  C GTAC  G
+\end{verbatim}
+
+Additionally, optimal alignments producing longest-common-subsequences are not necessarily unique.
+For example, the following alignment also gives the longest-common-subsequence \verb=CCTACTGTACG=.
+
+\begin{verbatim}
+GC---CTAC-AATCGTAC--GCA
+-CTATCTACC--T-GTACTTG--
+ C   CTAC   T GTAC  G
+ \end{verbatim}
+
+\end{document}
+
+

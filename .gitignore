@@ -8,4 +8,6 @@ src/qwertyDistance.cpp
 *.html
 *.pyc
 *~
+report.*
 !report.txt
+!report.tex

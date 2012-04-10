@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2012 Gordon Bailey
+ */
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -6,12 +9,6 @@ using std::endl;
 using std::setw;
 using std::setprecision;
 using std::fixed;
-
-#include <string>
-using std::string;
-
-#include <algorithm>
-using std::copy;
 
 #include <cassert>
 
@@ -78,8 +75,7 @@ class DPM_Implementation: public DPM_ImplementationBase{
 //                                                                             //
 /////////////////////////////////////////////////////////////////////////////////
 //
-// little util
-// TODO - handle this properly
+// little utility function
 template <typename T> T max(T a, T b, T c){
    return (a > b) ? (a > c ? a : c) : (b > c ? b : c);
 }
@@ -467,16 +463,15 @@ bool DPM::Iterator::operator!=(const DPM::Iterator & other){
    return !operator==(other);
 }
 
-// TODO - verify that post/pre incrementing works as expected
-// de-reference
+// de-reference operator
 DPM::Alignment DPM::Iterator::operator* (){
    return currentAlignment;
 }
 
 // for reference this is how post/pre-increment is handled
 //
-//DPM::Iterator & operator++();   {++p;return *this;}
-//DPM::Iterator   operator++(int) {myiterator tmp(*this); operator++(); return tmp;}
+// DPM::Iterator & operator++();   {++p;return *this;}
+// DPM::Iterator   operator++(int) {myiterator tmp(*this); operator++(); return tmp;}
 
 // pre-increment
 DPM::Iterator & DPM::Iterator::operator++ (){
@@ -501,8 +496,10 @@ DPM::Iterator  DPM::Iterator::operator++ (int){
    return tmp;
 }
 
+// default constructor
 DPM::Alignment::Alignment() : a(NULL), b(NULL) { }
 
+// copy constructor
 DPM::Alignment::Alignment(const DPM::Alignment & other) {
    if(other.a){
       size_t len;
@@ -600,8 +597,8 @@ DPM::Alignment::Alignment(char * a, char * b, size_t len){
    }
 }
 
-// TODO - fancier printing methods (ANSI, maybe HTML)
-// Also, pass an std::ostream for more flexibility
+// possible future todo - additional printing methods (e.g. HTML)
+// Also, pass an std::ostream for more flexibility (printing to a file for example)
 void DPM::Alignment::print(){
    cout << a << endl << b << endl;
 }

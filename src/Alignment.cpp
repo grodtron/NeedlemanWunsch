@@ -1,20 +1,13 @@
+/*
+ * Copyright (C) 2012 Gordon Bailey
+ */
 #include <iostream>
 using std::cout;
-using std::cerr;
 using std::endl;
 using std::cin;
 
 #include <iomanip>
 using std::setw;
-
-#include <vector>
-using std::vector;
-
-#include <algorithm>
-using std::copy;
-
-#include <iterator>
-using std::back_inserter;
 
 #include <climits>
 
@@ -42,6 +35,7 @@ void getDna(DNA & a, DNA & b){
    }
 }
 
+// data type and constants for getting parameters
 const char DOUBLE = 1 << 0;
 const char INT    = 1 << 1;
 
@@ -50,6 +44,8 @@ union multi_t{
    double asDouble;
 };
 
+// get a single parameter using a custom prompt message. Determine if he value entered
+// is an int or a double and set the flag appropriately
 void getParameter(const char * message, multi_t & val, char & valtype){
    cout << message;
    cin  >> val.asDouble;
@@ -62,13 +58,13 @@ void getParameter(const char * message, multi_t & val, char & valtype){
    }
 }
 
+// get all scoring parameters, as well as forcing them all to the same data-type (either int or double)
 void getScoringParameters(char & type, multi_t & match, multi_t & gap, multi_t & mismatch){
 
    char match_type;
    char gap_type;
    char mismatch_type;
 
-   // TODO - validate signs
    getParameter("Enter match score: ", match, match_type);
    getParameter("Enter gap penalty (as a positive value): ", gap, gap_type);
    getParameter("Enter mismatch penalty (as a positive value): ", mismatch, mismatch_type);
@@ -77,11 +73,30 @@ void getScoringParameters(char & type, multi_t & match, multi_t & gap, multi_t &
    // should be converted to floats. Otherwise they are all already ints
    if( (match_type | gap_type | mismatch_type) & DOUBLE){
       match.asDouble = match_type ? match.asDouble : (double)match.asInt;
-      gap.asDouble = gap_type ? gap.asDouble : (double)gap.asInt;
-      mismatch.asDouble = mismatch_type ? mismatch.asDouble : (double)mismatch.asInt;
+      gap.asDouble = -1 * (gap_type ? gap.asDouble : (double)gap.asInt);
+      mismatch.asDouble = -1 * (mismatch_type ? mismatch.asDouble : (double)mismatch.asInt);
       type = DOUBLE;
+
+      // this is just a warning incase the sign for entering the gap and mismatch penalties is not
+      // understood properly.
+      if(gap.asDouble > 0){
+         cout << "WARNING - negative gap penalty (gaps will increase the score of each alignment)" << endl;
+      }
+      if(mismatch.asDouble > 0){
+         cout << "WARNING - negative mismatch penalty (mismatches will increase the score of each alignment)" << endl;
+      }
    }else{
       type = INT;
+      gap.asInt *= -1;
+      mismatch.asInt *= -1;
+
+      // same warning as above
+      if(gap.asInt > 0){
+         cout << "WARNING - negative gap penalty (gaps will increase the score of each alignment)" << endl;
+      }
+      if(mismatch.asInt > 0){
+         cout << "WARNING - negative mismatch penalty (mismatches will increase the score of each alignment)" << endl;
+      }
    }
 
 }
@@ -94,6 +109,8 @@ void loopA(DNA & a, DNA & b, DPM* & matrix){
    multi_t match, gap, mismatch;
 
    getScoringParameters(type, match, gap, mismatch);
+
+   if (matrix) delete matrix;
 
    // create the DPM object
    if(type == DOUBLE){
@@ -111,9 +128,7 @@ int main(int argc, const char *argv[])
 
    DNA a;
    DNA b;
-   DPM * matrix;
-
-
+   DPM * matrix = NULL;
 
    const char BREAK_1 = 1 << 0;
    const char BREAK_2 = 1 << 1;
@@ -144,11 +159,11 @@ int main(int argc, const char *argv[])
                cout << a << endl << b << endl;
                break;
             case 2:
-               //cout << "TODO - print matrix" << endl;
+               // print matrix
                matrix->print();
                break;
             case 3:
-               //cout << "TODO - print matrix" << endl;
+               // print traceback
                matrix->printTraceback();
                break;
             // print first
@@ -181,32 +196,8 @@ int main(int argc, const char *argv[])
          }
       }
    }
-/*
-   // get iterators from it
-   DPM::Iterator mit = matrix->begin();
-   DPM::Iterator mend= matrix->end();
 
-   vector<DPM::Alignment> testVect;
-   //testVect.resize(10);
-
-   //copy(mend, mit, back_inserter(testVect));
-   copy(mit, mend, back_inserter(testVect));
-
-   vector<DPM::Alignment>::iterator vit = testVect.begin();
-   vector<DPM::Alignment>::iterator vend = testVect.end();
-
-   //mit = DPM::Iteratormatrix.begin();
-   //mend= DPM::Iterator(matrix.end());
-
-   // iterate through the results
-   while (vit != vend){
-      (*vit).print();
-      cout << endl;
-      ++vit;
-   }
-*/
-
-   delete matrix;
+   if (matrix) delete matrix;
 
    return 0;
 }

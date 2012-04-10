@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2012 Gordon Bailey
+ */
 #ifndef DPM_H_
 #define DPM_H_
 

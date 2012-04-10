@@ -29,10 +29,12 @@ on the public interface for getting the results of the algorithm, the
 implementation details of the templated class were hidden as much as possible
 from the end user of the DPM object. This was accomplished by wrapping all of
 the business logic of the Needleman-Wunsch object in a seperate template class,
-DPM_Implementation, which inherits from an abstract base class DPM_ImplementationBase. The actual DPM object only keeps track of a pointer of
-the DPM_ImplementationBase type that references an instance of the templated
-DPM_Implementation class. By using one constructor that takes int parameters, and another that takes doubles, the user of the class can pass whatever
-datatype they like, and not have to deal with variables of multiple templated types.
+DPM_Implementation, which inherits from an abstract base class DPM_ImplementationBase.
+The actual DPM object only keeps track of a pointer of the DPM_ImplementationBase
+type that references an instance of the templated DPM_Implementation class. By
+using one constructor that takes int parameters, and another that takes doubles,
+the user of the class can pass whatever datatype they like, and not have to deal
+with variables of multiple templated types.
 
 # Traceback procedure
 
@@ -56,12 +58,13 @@ limited number of possible alignments, to retrieve some, and then retrieve
 more later on, or to retrieve all alignments using a lazy evaluation strategy,
 which can provide a lot of memory savings.
 
-To make the retrieval of alignments as convenient as possible, an STL compatible iterator was created that makes it possible to easily retrieve results one at a time. The iterator keeps a stack of nodes, which act as a
-bookmark for the current position within the traceback procedure. Each time
-a new alignment is requested, the iterator calls the _traceback() function of
-its parent DPM object, passing its current stack. The stack is updated, and
-the next alignment is returned to the iterator, overwriting the alignment
-that it stored previously.
+To make the retrieval of alignments as convenient as possible, an STL compatible
+iterator was created that makes it possible to easily retrieve results one at a
+time. The iterator keeps a stack of nodes, which act as a bookmark for the current
+position within the traceback procedure. Each time a new alignment is requested,
+the iterator calls the _traceback() function of its parent DPM object, passing its
+current stack. The stack is updated, and the next alignment is returned to the
+iterator, overwriting the alignment that it stored previously.
 
 In this program, the main advantage of this approach to calculating all
 possible alignments is reduced space complexity. Rather than calculating all
@@ -73,8 +76,39 @@ thousands of possible alignments.
 Time and Space Complexity
 -------------------------
 
-traceback - since the algorithm is a simple depth-first search, the time
-complexity is O(|E| + |V|). The number of vertices is (m + 1)(n + 1), and the number of edges is 3mn + m + n. Therefore the time complexity is O(mn).
+# traceback
+
+The time complexity of the traceback procedure is different for retrieving
+a single optimal alignment versus all possible alignments. For a single optimal
+alignment, the maximum possible length is m+n, which would result from a situation
+where there are no matches and gaps are inserted at all positions, for example:
+
+AAAAAAAAA-------
+---------GGGGGGG
+
+In this case, the time complexity is O(m + n). The best case is that the length of
+the optiaml alignment is the same as the lenght of the longest sequence to be aligned,
+for example:
+
+ATCGTAGCTCAGTACGTGACTG
+AT--TAGC-CAG-----GA-TG
+
+In this case, the time complexity is O(max(m,n)). In both cases, the time complexity is
+roughly linear in m and n.
+
+The time complexity for finding all optimal alignments is obviously greater than for
+finding one optimal alignment. In this case a directed acyclic graph is implicitly
+stored in the filled matrix (represented by the directional flags at each cell),
+which makes finding all optimal aligments a simple depth-first traversal of the graph,
+which has a worst-case time complexity of O(E + V) where E is the number of edges
+in the graph and V is the number of vertices. In the worst case, every cell in the matrix
+is a vertex, and every cell (other than those on the sides of the matrix) has three edges
+leaving it (with the m + n edge cells having one edge each). This gives a total worst-case
+time complexity of O((m+1)(n+1) + 3mn + m + n) = O(mn).
+
+since the algorithm is a simple depth-first search, the time
+complexity is O(|E| + |V|). The number of vertices is (m + 1)(n + 1), and
+the number of edges is 3mn + m + n. Therefore the time complexity is O(mn).
 
 Space complexity is at most 3(m + n) = O(m+n).
 
@@ -84,4 +118,4 @@ Bugs
 ----
 
 There are no known bugs in the program. Additionally, the program
-has been tested using valgrind, an there are no memory leaks present.
+has been tested using valgrind, and there are no memory leaks present.
