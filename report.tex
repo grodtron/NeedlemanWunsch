@@ -12,7 +12,7 @@
 The DNA object is relatively simple. Its only responsibility is to validate
 and store a sequence of characters representing a piece of DNA. Inputting
 data into the DNA object is done either when the object is constructed, by
-passing a c-string representing the sequence to the constructor, or is done
+passing a c-string representing the sequence to the constructor, or
 using an overloaded \verb=operator>>= function reading from \verb=cin= (or any other \verb=istream=
  object).
 
@@ -65,9 +65,8 @@ traceback procedure becomes a simple traversal of the acyclic directed
 graph made up of the flags stored in the matrix. This traversal could easily
 be done using a recursive function, but instead a stack-based implementation
 was chosen. The reason for this was to make it possible to retrieve only a
-limited number of possible alignments, to retrieve some, and then retrieve
-more later on, or to retrieve all alignments using a lazy evaluation strategy,
-which can provide significant memory savings.
+limited number of possible alignments, or to retrieve all alignments using
+a lazy evaluation strategy, which can provide significant memory savings.
 
 To make the retrieval of alignments as convenient as possible, an STL compatible
 iterator was created that makes it possible to easily retrieve results one at a
@@ -140,8 +139,9 @@ retrieved, because only one alignment is stored at a time.
 
 \subsection*{Bugs}
 
-There are no known bugs in the program. Additionally, the program
-has been tested using \verb=valgrind=, and there are no memory leaks present.
+There are no known bugs in the program. It compiles without warnings using
+the \verb=g++= flags \verb=-Wall= and \verb=-Wextra=, and
+testing with \verb=valgrind= has shown that there are no memory leaks.
 
 \section*{Observations}
 
